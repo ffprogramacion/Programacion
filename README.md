@@ -1,2 +1,8 @@
-Este es un repositorio destinado a la práctica de la materia Programación de la carrera ingeniería en computación
-Hola mi nombre es Franco
+# Proyecto programacion 2026.
+
+## Descripcion.
+
+## Tecnologias.
+
+## Setup.
+
