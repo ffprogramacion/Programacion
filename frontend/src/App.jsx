@@ -10,7 +10,7 @@ function App() {
   return (
     <>
       <h1>Hola Mundo</h1>
-      <p>hola profe funciona </p>
+      <p>funciona </p>
     </>
   )
 }
