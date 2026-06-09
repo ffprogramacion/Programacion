@@ -3,13 +3,7 @@ import React, { createContext, useState, useContext } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // Simulamos un usuario inicial para que pruebes las vistas.
-  // Cambia el role a 'teacher' o 'admin' para ver cómo se transforma la app.
-  const [user, setUser] = useState({
-    name: "Facundo Boide",
-    role: "student", // Valores: 'student', 'teacher', 'admin'
-    id: "12345"
-  });
+  const [user, setUser] = useState(null); // null significa que no hay sesión activa
 
   const login = (userData) => setUser(userData);
   const logout = () => setUser(null);
