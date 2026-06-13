@@ -56,47 +56,60 @@ export default function Login() {
     navigate('/clases', { replace: true });
   };
 
-  // Función para los botones redondos de acceso rápido de tu mockup
-  const handleQuickAccess = (selectedRole) => {
-    setRole(selectedRole);
-    if (selectedRole === 'student') setEmail('alumno@unraf.edu.ar');
-    if (selectedRole === 'teacher') setEmail('profesor.milton@unraf.edu.ar');
-    if (selectedRole === 'admin') setEmail('admin@unraf.edu.ar');
-  };
-
   return (
     <Box 
       sx={{ 
-        background: 'linear-gradient(135deg, #0f5cb3 0%, #1976d2 100%)', // Paleta UNRaf
-        minHeight: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center',
-        px: 2
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      background: 'linear-gradient(135deg, #0f5cb3 0%, #114682 100%)',
+      
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center', 
+      justifyContent: 'center',
+      overflowY: 'auto',
+      p: 2
       }}
     >
       <CssBaseline />
       
-<Box 
-  sx={{ 
-    display: 'flex', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    mb: 4, 
-    mt: 2  
-  }}
->
-  <img 
-    src={logoUnraf} // <-- Aquí se pasa la variable que importaste arriba
-    alt="Logo Institucional UNRaf" 
-    style={{ 
-      width: 'auto', 
-      height: '65px', 
-      objectFit: 'contain'
-    }} 
-  />
-</Box>
+  <Box 
+    sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', // Los elementos se apilan verticalmente
+      alignItems: 'center',    // Centra horizontalmente imagen y texto
+      justifyContent: 'center', 
+      mb: 4, 
+      mt: 2  
+    }}
+  >
+    {/* Imagen del Logo */}
+    <img 
+      src={logoUnraf} 
+      alt="Logo Institucional UNRaf" 
+      style={{ 
+        width: 'auto', 
+        height: '155px', 
+        objectFit: 'contain',
+        marginBottom: '12px' // Espacio entre el logo y el texto de abajo
+      }} 
+    />
+    <Typography 
+    variant="body2" 
+    sx={{ 
+      color: 'white', 
+      fontWeight: '500', 
+      letterSpacing: '1px',
+      textTransform: 'uppercase', // Opcional: le da un toque más formal/institucional
+      opacity: 0.9 // Un poquito de transparencia para que no distraiga de la tarjeta principal
+    }}
+  >
+    UNRaf - Sistema de reserva de aulas
+  </Typography>
+    </Box>
       <Container maxWidth="xs" disableGutters>
         <Card sx={{ borderRadius: 4, boxShadow: '0px 10px 30px rgba(0,0,0,0.15)', p: 1 }}>
           <CardContent sx={{ p: 3 }}>
@@ -208,26 +221,6 @@ export default function Login() {
               >
                 {isRegister ? 'Registrarse' : 'Ingresar'}
               </Button>
-
-              {/* Sección Acceso Rápos Demo de tu Prototipo */}
-              {!isRegister && (
-                <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5, letterSpacing: '0.5px' }}>
-                    acceso rápido demo
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1.5 }}>
-                    <Button variant="outlined" size="small" onClick={() => handleQuickAccess('student')} sx={{ borderRadius: 4, px: 2, textTransform: 'none', borderColor: '#1976d2', color: '#1976d2', fontWeight: 'bold' }}>
-                      Estudiante
-                    </Button>
-                    <Button variant="outlined" size="small" onClick={() => handleQuickAccess('teacher')} sx={{ borderRadius: 4, px: 2, textTransform: 'none', borderColor: '#2e7d32', color: '#2e7d32', fontWeight: 'bold' }}>
-                      Docente
-                    </Button>
-                    <Button variant="outlined" size="small" onClick={() => handleQuickAccess('admin')} sx={{ borderRadius: 4, px: 2, textTransform: 'none', borderColor: '#d84315', color: '#d84315', fontWeight: 'bold' }}>
-                      Admin
-                    </Button>
-                  </Box>
-                </Box>
-              )}
 
               {/* Enrutador alternativo inferior */}
               <Box sx={{ textAlign: 'center', mt: 2 }}>
