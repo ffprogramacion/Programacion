@@ -182,3 +182,20 @@
     border-right-color: var(--border);
   }
 }
+/* Forzamos a que el html y el body ignoren cualquier margen por defecto del navegador */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  min-height: 100vh;
+  background-color: #f4f6f9; /* Color gris de fondo para el dashboard */
+  overflow-x: hidden;
+}
+
+/* Rompemos el contenedor de Vite que limita la pantalla a 1280px */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
