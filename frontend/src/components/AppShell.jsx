@@ -4,7 +4,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 
-const drawerWidth = 260;
+// Exportamos el ancho para que Navbar y Sidebar usen exactamente el mismo valor
+export const DRAWER_WIDTH = 260;
 
 export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,18 +29,31 @@ export default function AppShell() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9' }}>
+      {/* CssBaseline normaliza los estilos CSS nativos entre navegadores */}
       <CssBaseline />
-      <Navbar onDrawerToggle={handleDrawerToggle} title={getTitle()} />
-      <Sidebar mobileOpen={mobileOpen} onDrawerToggle={handleDrawerToggle} />
+      
+      {/* Pasamos el DRAWER_WIDTH como prop a los componentes estructurales */}
+      <Navbar 
+        drawerWidth={DRAWER_WIDTH} 
+        onDrawerToggle={handleDrawerToggle} 
+        title={getTitle()} 
+      />
+      
+      <Sidebar 
+        drawerWidth={DRAWER_WIDTH} 
+        mobileOpen={mobileOpen} 
+        onDrawerToggle={handleDrawerToggle} 
+      />
       
       <Box 
         component="main" 
         sx={{ 
           flexGrow: 1, 
-          p: 4, 
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          p: { xs: 2, sm: 4 }, // Padding adaptativo: menos espacio en celular, más en desktop
+          width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          minWidth: 0 // Evita que tablas pesadas de MUI rompan el layout desbordándose
         }}
       >
         <Toolbar /> {/* Separador para que el AppBar fijo no tape el contenido */}

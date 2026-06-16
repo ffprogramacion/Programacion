@@ -1,12 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Drawer, Toolbar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Box, Typography } from '@mui/material';
-import { Class as ClassIcon, CalendarMonth as CalendarIcon, History as HistoryIcon, AdminPanelSettings as AdminIcon, ExitToApp as LogoutIcon, Person as PersonIcon, Inventory as StockIcon, Group as UsersIcon } from '@mui/icons-material';
+import { 
+  Class as ClassIcon, 
+  CalendarMonth as CalendarIcon, 
+  History as HistoryIcon, 
+  AdminPanelSettings as AdminIcon, 
+  ExitToApp as LogoutIcon, 
+  Person as PersonIcon, 
+  Inventory as StockIcon, 
+  Group as UsersIcon 
+} from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
-const drawerWidth = 260;
-
-export default function Sidebar({ mobileOpen, onDrawerToggle }) {
+export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
   const { user, logout } = useAuth();
   const location = useLocation();
 
@@ -24,14 +31,18 @@ export default function Sidebar({ mobileOpen, onDrawerToggle }) {
   ];
 
   const drawerContent = (
-    <Box sx={{ overflow: 'auto', mt: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ overflow: 'auto', display: 'flex', flexDirection: 'column', height: '100%' }}>
       {user && (
-        <Box sx={{ p: 2, px: 3, mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '500' }}>
+        <Box sx={{ p: 2, px: 3, mt: 1.5, mb: 1 }}>
+          <Typography 
+            variant="caption" 
+            color="text.secondary" 
+            sx={{ textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '500' }}
+          >
             Credencial Activa
           </Typography>
           <Typography variant="h6" fontWeight="bold" sx={{ color: '#0f5cb3', mt: 0.5, fontSize: '1rem' }}>
-            {user.name.toUpperCase()}
+            {user?.name ? user.name.toUpperCase() : 'USUARIO UNRAF'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
             Rol: {user.role === 'admin' ? 'Administrador' : user.role === 'teacher' ? 'Docente' : 'Estudiante'}
@@ -86,11 +97,14 @@ export default function Sidebar({ mobileOpen, onDrawerToggle }) {
       </List>
       
       <Divider sx={{ mx: 2 }} />
-      <List sx={{ px: 2, py: 2 }}>
+      <List sx={{ px: 2, py: 1.5 }}>
         <ListItem disablePadding>
           <ListItemButton onClick={logout} sx={{ borderRadius: 2, py: 1.2 }}>
             <ListItemIcon sx={{ minWidth: '40px' }}><LogoutIcon color="error" /></ListItemIcon>
-            <ListItemText primary="Cerrar Sesión" sx={{ '& .MuiTypography-root': { color: 'error.main', fontWeight: '500', fontSize: '0.92rem' } }} />
+            <ListItemText 
+              primary="Cerrar Sesión" 
+              sx={{ '& .MuiTypography-root': { color: 'error.main', fontWeight: '500', fontSize: '0.92rem' } }} 
+            />
           </ListItemButton>
         </ListItem>
       </List>
@@ -104,7 +118,7 @@ export default function Sidebar({ mobileOpen, onDrawerToggle }) {
         variant="temporary"
         open={mobileOpen}
         onClose={onDrawerToggle}
-        ModalProps={{ keepMounted: true }}
+        ModalProps={{ keepMounted: true }} // Mejora el rendimiento de renderizado en móviles.
         sx={{ 
           display: { xs: 'block', sm: 'none' }, 
           '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid #e0e0e0' } 
@@ -113,6 +127,7 @@ export default function Sidebar({ mobileOpen, onDrawerToggle }) {
         <Toolbar />
         {drawerContent}
       </Drawer>
+      
       {/* Drawer Permanente para Escritorio */}
       <Drawer
         variant="permanent"

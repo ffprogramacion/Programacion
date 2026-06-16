@@ -4,16 +4,26 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import NotificationBell from './NotificationBell';
 
-export default function Navbar({ onDrawerToggle, title }) {
+export default function Navbar({ drawerWidth, onDrawerToggle, title }) {
   const { user, setUser } = useAuth();
 
-  // Función de desarrollo para que saltes entre perfiles sin desloguearte
+  // Función de desarrollo para saltar entre perfiles sin desloguearse
   const toggleRoleTesting = () => {
+    if (!user) return; // Salvaguarda por si se ejecuta sin usuario activo
+    
     const roles = ['student', 'teacher', 'admin'];
     const nextRole = roles[(roles.indexOf(user.role) + 1) % roles.length];
-    // Aseguramos que pasamos todo el objeto viejo (...user) y solo pisamos el rol
-    setUser({ ...user, name: user?.name || "Facundo", role: nextRole });
+    
+    // Aseguramos mantener todo el objeto viejo (...user) y solo pisamos el rol
+    setUser({ 
+      ...user, 
+      name: user?.name || "Facundo Boide", 
+      role: nextRole 
+    });
   };
+
+  // Extraemos la inicial de forma ultra segura
+  const userInitial = user?.name ? user.name.trim()[0].toUpperCase() : 'U';
 
   return (
     <AppBar 
@@ -25,14 +35,27 @@ export default function Navbar({ onDrawerToggle, title }) {
       }}
     >
       <Toolbar>
-        <IconButton color="inherit" edge="start" onClick={onDrawerToggle} sx={{ mr: 2, display: { sm: 'none' } }}>
+        {/* Botón de Hamburguesa para pantallas chicas (celulares/tablets) */}
+        <IconButton 
+          color="inherit" 
+          edge="start" 
+          onClick={onDrawerToggle} 
+          sx={{ mr: 2, display: { sm: 'none' } }}
+        >
           <MenuIcon />
         </IconButton>
         
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: '600', fontSize: '1.15rem' }}>
+        {/* Título dinámico del módulo institucional */}
+        <Typography 
+          variant="h6" 
+          noWrap 
+          component="div" 
+          sx={{ flexGrow: 1, fontWeight: '600', fontSize: '1.15rem' }}
+        >
           {title}
         </Typography>
 
+        {/* Herramienta de Testing Rápido de Roles */}
         {user && (
           <Button 
             variant="contained" 
@@ -51,11 +74,12 @@ export default function Navbar({ onDrawerToggle, title }) {
           </Button>
         )}
 
+        {/* Notificaciones y Perfil */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <NotificationBell />
           {user && (
             <Avatar sx={{ bgcolor: '#00a896', fontWeight: 'bold', fontSize: '0.9rem' }}> {/* Verde Agua UNRaf */}
-              {user.name[0].toUpperCase()}
+              {userInitial}
             </Avatar>
           )}
         </Box>
