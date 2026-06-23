@@ -13,9 +13,9 @@ import Reservar from './views/Reservar';
 import Reservas from './views/Reservas';
 import Profile from './views/Profile';
 
-import GestionAulas from './views/GestionAulas';
-import StockMateriales from './views/StockMateriales';
-import ControlUsuarios from './views/ControlUsuarios';
+import GestionAulas from './views/admin/GestionAulas'; 
+import StockMateriales from './views/admin/StockMateriales';
+import ControlUsuarios from './views/admin/ControlUsuarios';
 
 function App() {
   return (

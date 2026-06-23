@@ -6,20 +6,19 @@ import {
   CancelScheduleSend as CancelIcon, 
   Room as RoomIcon, 
   CalendarMonth as CalendarIcon, 
-  Person as PersonIcon, 
-  Construction as GearIcon 
+  Person as PersonIcon 
 } from '@mui/icons-material';
 
 export default function Reservas() {
   const { user, reservas, cancelarReserva } = useAuth();
   const [soloMias, setSoloMias] = useState(user?.role !== 'admin');
 
-  // Configuración de las columnas con diseño estilizado
+  // Configuración de las columnas con diseño estilizado y elástico
   const columns = [
     { 
       field: 'id', 
       headerName: 'ID', 
-      width: 70, // El ID puede quedar fijo porque es chico
+      width: 70, 
       renderCell: (p) => (
         <Typography variant="body2" sx={{ fontFamily: 'monospace', color: 'text.secondary', fontWeight: '500' }}>
           #{String(p.value).slice(-4)}
@@ -29,7 +28,7 @@ export default function Reservas() {
     { 
       field: 'aula', 
       headerName: 'Aula / Ubicación', 
-      flex: 1.5, // Toma más espacio de forma elástica
+      flex: 1.5, 
       minWidth: 180,
       renderCell: (p) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -76,7 +75,7 @@ export default function Reservas() {
     { 
       field: 'estado', 
       headerName: 'Estado', 
-      width: 100, // Queda fijo porque el chip siempre mide lo mismo
+      width: 100, 
       renderCell: (p) => {
         const isActive = p.value === 'Activa';
         return (
@@ -97,7 +96,7 @@ export default function Reservas() {
     },
   ];
 
-  // Si el usuario es ADMIN, añadimos el botón destructivo estilizado
+  // Si el usuario es ADMIN, añadimos el botón destructivo que gatilla la baja y la notificación
   if (user?.role === 'admin') {
     columns.push({
       field: 'acciones',
@@ -112,7 +111,7 @@ export default function Reservas() {
               color="error" 
               size="small" 
               startIcon={<CancelIcon />} 
-              onClick={() => cancelarReserva(params.id)}
+              onClick={() => cancelarReserva(params.id)} // Dispara la lógica unificada
               sx={{ 
                 textTransform: 'none', 
                 borderRadius: 2, 
@@ -166,42 +165,20 @@ export default function Reservas() {
         <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
           <Box 
             sx={{ 
-              height: 'auto', // 🔥 Cambiado de 440 a auto para que estire verticalmente
-              minHeight: 350, // Mantiene un piso estético mínimo
+              height: 'auto', 
+              minHeight: 350, 
               width: '100%', 
               backgroundColor: 'white',
-              // Estilos personalizados internos de Material UI
-              '& .MuiDataGrid-root': {
-                border: 'none',
-              },
-              '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: '#f1f5f9',
-                borderBottom: '2px solid #e2e8f0',
-              },
-              '& .MuiDataGrid-columnHeaderTitle': {
-                fontWeight: '700',
-                color: '#475569',
-                fontSize: '0.88rem',
-              },
+              '& .MuiDataGrid-root': { border: 'none' },
+              '& .MuiDataGrid-columnHeaders': { backgroundColor: '#f1f5f9', borderBottom: '2px solid #e2e8f0' },
+              '& .MuiDataGrid-columnHeaderTitle': { fontWeight: '700', color: '#475569', fontSize: '0.88rem' },
               '& .MuiDataGrid-row': {
                 borderBottom: '1px solid #f1f5f9',
-                '&:nth-of-type(even)': {
-                  backgroundColor: '#f8fafc',
-                },
-                '&:hover': {
-                  backgroundColor: '#f0fdfa !important',
-                  transition: 'background-color 0.2s ease',
-                },
+                '&:nth-of-type(even)': { backgroundColor: '#f8fafc' },
+                '&:hover': { backgroundColor: '#f0fdfa !important', transition: 'background-color 0.2s ease' },
               },
-              '& .MuiDataGrid-cell': {
-                display: 'flex',
-                alignItems: 'center',
-                borderBottom: 'none',
-              },
-              '& .MuiDataGrid-footerContainer': {
-                borderTop: '2px solid #e2e8f0',
-                backgroundColor: '#f8fafc',
-              }
+              '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center', borderBottom: 'none' },
+              '& .MuiDataGrid-footerContainer': { borderTop: '2px solid #e2e8f0', backgroundColor: '#f8fafc' }
             }}
           >
             <DataGrid 
@@ -211,7 +188,7 @@ export default function Reservas() {
               rowsPerPageOptions={[5]}
               disableSelectionOnClick 
               density="comfortable"
-              autoHeight // 🔥 PROPIEDAD CLAVE: Obliga al DataGrid a adaptarse al contenido sin meter scroll
+              autoHeight 
             />
           </Box>
         </CardContent>

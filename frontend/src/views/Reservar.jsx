@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Grid, Card, CardContent, Typography, Button, TextField, Box, MenuItem, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
-import { CalendarMonth as CalendarIcon, Info as InfoIcon } from '@mui/icons-material';
+import { Grid, Card, CardContent, Typography, Box, MenuItem, Checkbox, FormControlLabel, FormGroup, TextField, Button } from '@mui/material';
+import { Info as InfoIcon } from '@mui/icons-material';
 
 export default function Reservar() {
-  const { user, agregarReserva } = useAuth();
+  const { user, agregarReserva, aulas } = useAuth();
   const navigate = useNavigate();
 
   // Estados del formulario
-  const [aula, setAula] = useState('');
+  const [aulaSeleccionada, setAulaSeleccionada] = useState('');
   const [fecha, setFecha] = useState('');
   const [horaInicio, setHoraInicio] = useState('');
   const [materiales, setMateriales] = useState({ proyector: false, notebooks: false, cables: false });
+
+  // 🌟 CONTROL DE SEGURIDAD MÁXIMO: Si por alguna razón 'aulas' viene vacío o indefinido, 
+  // evitamos que la app tire pantalla en blanco mostrando un aviso elegante.
+  if (!aulas || aulas.length === 0) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center', mt: 5 }}>
+        <Typography variant="h6" color="text.secondary">
+          Cargando inventario de espacios físicos...
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Si tarda demasiado, inicia sesión como Admin y registra un aula en "Gestión de Aulas".
+        </Typography>
+      </Box>
+    );
+  }
 
   const handleCheckboxChange = (e) => {
     setMateriales({ ...materiales, [e.target.name]: e.target.checked });
@@ -20,32 +35,25 @@ export default function Reservar() {
 
   const handleConfirmar = (e) => {
     e.preventDefault();
-    if (!aula || !fecha || !horaInicio) {
+    if (!aulaSeleccionada || !fecha || !horaInicio) {
       alert("Por favor completa los campos principales (Aula, Fecha y Hora)");
       return;
     }
 
-    // Mapeamos los materiales tildados a un texto limpio
     const listaMateriales = Object.keys(materiales)
       .filter(key => materiales[key])
       .map(key => key === 'proyector' ? 'Proyector' : key === 'notebooks' ? 'Kit Netbooks' : 'Cables')
       .join(', ') || 'Ninguno';
 
-    // Creamos la nueva reserva con estructura institucional
     const nuevaReserva = {
-      id: Date.now(), // ID único temporal basado en tiempo
-      aula: aula === 'lab1' ? 'Laboratorio de Sistemas 1' : aula === 'lab2' ? 'Laboratorio de Electrónica' : aula === 'magna' ? 'Aula Magna' : 'Sala de Estudio',
+      aula: aulaSeleccionada, 
       solicitante: user?.name || 'Usuario',
-      fecha: `${fecha.split('-').reverse().join('/')} - ${horaInicio} hs`, // Formato de fecha limpia
+      fecha: `${fecha.split('-').reverse().join('/')} - ${horaInicio} hs`, 
       materiales: listaMateriales,
-      estado: 'Activa',
       userId: user?.id || '12345'
     };
 
-    // 🔥 Disparamos la acción global
     agregarReserva(nuevaReserva);
-
-    // Redirigimos al historial para ver el impacto visual
     navigate('/reservas');
   };
 
@@ -57,11 +65,23 @@ export default function Reservar() {
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>Solicitud de Reserva</Typography>
               
-              <TextField fullWidth select label="Selecciona el Aula" value={aula} onChange={(e) => setAula(e.target.value)} margin="normal" required>
-                <MenuItem value="lab1">Laboratorio de Sistemas 1</MenuItem>
-                <MenuItem value="lab2">Laboratorio de Electrónica</MenuItem>
-                {user?.role === 'teacher' && <MenuItem value="magna">Aula Magna</MenuItem>}
-                <MenuItem value="estudio">Sala de Estudio</MenuItem>
+              <TextField 
+                fullWidth 
+                select 
+                label="Selecciona el Aula" 
+                value={aulaSeleccionada} 
+                onChange={(e) => setAulaSeleccionada(e.target.value)} 
+                margin="normal" 
+                required
+              >
+                {aulas
+                  .filter(aula => aula && !(aula.nombre === 'Aula Magna' && user?.role === 'student'))
+                  .map((aula) => (
+                    <MenuItem key={aula.id} value={aula.nombre}>
+                      {aula.nombre} ({aula.tipo || 'Común'})
+                    </MenuItem>
+                  ))
+                }
               </TextField>
 
               <TextField fullWidth type="date" label="Fecha" value={fecha} onChange={(e) => setFecha(e.target.value)} InputLabelProps={{ shrink: true }} margin="normal" required />
