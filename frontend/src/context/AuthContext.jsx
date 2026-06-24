@@ -11,20 +11,18 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
-  // 2. 🏛️ AULAS BLINDADAS: Si no hay nada en localStorage, cargamos SI O SÍ el array base al instante
+  // 2. Aulas
   const [aulas, setAulas] = useState(() => {
     const savedAulas = localStorage.getItem('universidad_aulas');
     if (savedAulas) {
       try {
         const parsed = JSON.parse(savedAulas);
-        // Validamos que sea un array y no esté vacío
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {
         console.error("Error leyendo aulas, reseteando...", e);
       }
     }
     
-    // Array de respaldo obligatorio si lo de arriba falla o está vacío
     const aulasPorDefecto = [
       { id: 1, nombre: 'Laboratorio de Sistemas 1', ubicacion: 'Planta Alta - Edificio Azul', capacidad: 30, tipo: 'Informática' },
       { id: 2, nombre: 'Laboratorio de Electrónica', ubicacion: 'Planta Baja - Bloque I+D', capacidad: 20, tipo: 'Taller Técnico' },
@@ -35,17 +33,33 @@ export const AuthProvider = ({ children }) => {
     return aulasPorDefecto;
   });
 
-  // 3. Reservas
-  const [reservas, setReservas] = useState(() => {
-    const savedReservas = localStorage.getItem('universidad_reservas');
-    return savedReservas ? JSON.parse(savedReservas) : [
-      { id: 1, aula: 'Laboratorio de Sistemas 1', solicitante: 'Facundo Boide', fecha: '12/06/2026 - 14:00', materiales: 'Proyector Epson', estado: 'Activa', userId: '12345' },
-      { id: 2, aula: 'Aula Magna', solicitante: 'Ing. Milton', fecha: '15/06/2026 - 09:00', materiales: 'Ninguno', estado: 'Activa', userId: '8888' },
-      { id: 3, aula: 'Laboratorio de Electrónica', solicitante: 'Profesor Carlos', fecha: '19/06/2026 - 16:00', materiales: 'Kit Netbooks', estado: 'Cancelada', userId: '9999' }
+  // 3. Clases / Materias Centralizadas
+  const [clases, setClases] = useState(() => {
+    const savedClases = localStorage.getItem('universidad_clases');
+    return savedClases ? JSON.parse(savedClases) : [
+      { id: 1, nombre: 'Álgebra Lineal', profesorId: 'prof-1', profesor: 'Ing. Milton', ubicacion: 'Laboratorio de Sistemas 2', horario: 'Lunes 14:00 a 18:00', alumnosCount: 24, clave: 'ALG2026' },
+      { id: 2, nombre: 'Sistemas Embebidos', profesorId: 'prof-1', profesor: 'Ing. Milton', ubicacion: 'Aula 3', horario: 'Miércoles 09:00 a 13:00', alumnosCount: 18, clave: 'EMB32' }
     ];
   });
 
-  // 4. Notificaciones
+  // 4. Suscripciones de alumnos a las materias
+  const [suscripciones, setSuscripciones] = useState(() => {
+    const savedSusc = localStorage.getItem('universidad_suscripciones');
+    return savedSusc ? JSON.parse(savedSusc) : [
+      { id: 1, alumnoId: '12345', claseId: 2 } // Facundo Boide pre-inscrito en Sistemas Embebidos
+    ];
+  });
+
+  // 5. Reservas con soporte para id de clase
+  const [reservas, setReservas] = useState(() => {
+    const savedReservas = localStorage.getItem('universidad_reservas');
+    return savedReservas ? JSON.parse(savedReservas) : [
+      { id: 1, aula: 'Laboratorio de Sistemas 1', solicitante: 'Facundo Boide', fecha: '12/06/2026 - de 14:00 a 16:00 hs', materiales: 'Proyector Epson', estado: 'Activa', userId: '12345', claseId: null },
+      { id: 2, aula: 'Aula Magna', solicitante: 'Ing. Milton', fecha: '15/06/2026 - de 09:00 a 12:00 hs', materiales: 'Ninguno', estado: 'Activa', userId: 'prof-1', claseId: 1 }
+    ];
+  });
+
+  // 6. Notificaciones
   const [notificaciones, setNotificaciones] = useState(() => {
     const savedNotifs = localStorage.getItem('universidad_notificaciones');
     return savedNotifs ? JSON.parse(savedNotifs) : [
@@ -69,6 +83,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('universidad_aulas', JSON.stringify(aulas));
   }, [aulas]);
+
+  useEffect(() => {
+    localStorage.setItem('universidad_clases', JSON.stringify(clases));
+  }, [clases]);
+
+  useEffect(() => {
+    localStorage.setItem('universidad_suscripciones', JSON.stringify(suscripciones));
+  }, [suscripciones]);
 
   const login = (userData) => {
     setUser(userData);
@@ -118,7 +140,7 @@ export const AuthProvider = ({ children }) => {
       user, loading, login, logout, setUser, 
       reservas, agregarReserva, cancelarReserva,
       notificaciones, limpiarNotificaciones,
-      aulas, setAulas 
+      aulas, setAulas, clases, setClases, suscripciones, setSuscripciones
     }}>
       {children}
     </AuthContext.Provider>
