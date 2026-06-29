@@ -3,7 +3,6 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // 1. Usuario
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('universidad_user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -11,29 +10,61 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
-  // 2. Aulas
+  // 🏛️ INICIALIZADOR ROBUSTO: Respeta si el array está vacío para no inyectar "zombies"
   const [aulas, setAulas] = useState(() => {
     const savedAulas = localStorage.getItem('universidad_aulas');
-    if (savedAulas) {
+    if (savedAulas !== null) {
       try {
         const parsed = JSON.parse(savedAulas);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed; // Acepta arrays vacíos []
       } catch (e) {
         console.error("Error leyendo aulas, reseteando...", e);
       }
     }
     
+    // Solo inyecta esto la primerísima vez que se entra al sistema
     const aulasPorDefecto = [
-      { id: 1, nombre: 'Laboratorio de Sistemas 1', ubicacion: 'Planta Alta - Edificio Azul', capacidad: 30, tipo: 'Informática' },
-      { id: 2, nombre: 'Laboratorio de Electrónica', ubicacion: 'Planta Baja - Bloque I+D', capacidad: 20, tipo: 'Taller Técnico' },
-      { id: 3, nombre: 'Aula Magna', ubicacion: 'Bloque Central', capacidad: 120, tipo: 'Auditorio' },
-      { id: 4, nombre: 'Sala de Estudio Común', ubicacion: 'Anexo Biblioteca', capacidad: 15, tipo: 'Estudio' },
+      { 
+        id: 1, 
+        nombre: 'Laboratorio de Sistemas 1', 
+        ubicacion: 'Planta Alta - Edificio Azul', 
+        capacidad: 30, 
+        tipo: 'Informática',
+        imagen: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop',
+        descripcion: 'Laboratorio equipado con 30 estaciones de trabajo, proyectores duales y pizarrones inteligentes para clases de programación.'
+      },
+      { 
+        id: 2, 
+        nombre: 'Laboratorio de Electrónica', 
+        ubicacion: 'Planta Baja - Bloque I+D', 
+        capacidad: 20, 
+        tipo: 'Taller Técnico',
+        imagen: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop',
+        descripcion: 'Espacio acondicionado con osciloscopios, fuentes regulables y estaciones de soldado para prácticas de hardware y embebidos.'
+      },
+      { 
+        id: 3, 
+        nombre: 'Aula Magna', 
+        ubicacion: 'Bloque Central', 
+        capacidad: 120, 
+        tipo: 'Auditorio',
+        imagen: 'https://images.unsplash.com/photo-1592284988788-b21a8a25c34d?q=80&w=800&auto=format&fit=crop',
+        descripcion: 'Auditorio principal con acústica profesional, sistema de microfonía y pantalla gigante para conferencias y seminarios masivos.'
+      },
+      { 
+        id: 4, 
+        nombre: 'Sala de Estudio Común', 
+        ubicacion: 'Anexo Biblioteca', 
+        capacidad: 15, 
+        tipo: 'Estudio',
+        imagen: 'https://images.unsplash.com/photo-1577416412292-747c6607f055?q=80&w=800&auto=format&fit=crop',
+        descripcion: 'Espacio silencioso para lectura y trabajos en grupos reducidos. Cuenta con tomas de corriente en cada mesa.'
+      },
     ];
     localStorage.setItem('universidad_aulas', JSON.stringify(aulasPorDefecto));
     return aulasPorDefecto;
   });
 
-  // 3. Clases / Materias Centralizadas
   const [clases, setClases] = useState(() => {
     const savedClases = localStorage.getItem('universidad_clases');
     return savedClases ? JSON.parse(savedClases) : [
@@ -42,15 +73,11 @@ export const AuthProvider = ({ children }) => {
     ];
   });
 
-  // 4. Suscripciones de alumnos a las materias
   const [suscripciones, setSuscripciones] = useState(() => {
     const savedSusc = localStorage.getItem('universidad_suscripciones');
-    return savedSusc ? JSON.parse(savedSusc) : [
-      { id: 1, alumnoId: '12345', claseId: 2 } // Facundo Boide pre-inscrito en Sistemas Embebidos
-    ];
+    return savedSusc ? JSON.parse(savedSusc) : [{ id: 1, alumnoId: '12345', claseId: 2 }];
   });
 
-  // 5. Reservas con soporte para id de clase
   const [reservas, setReservas] = useState(() => {
     const savedReservas = localStorage.getItem('universidad_reservas');
     return savedReservas ? JSON.parse(savedReservas) : [
@@ -59,38 +86,19 @@ export const AuthProvider = ({ children }) => {
     ];
   });
 
-  // 6. Notificaciones
   const [notificaciones, setNotificaciones] = useState(() => {
     const savedNotifs = localStorage.getItem('universidad_notificaciones');
-    return savedNotifs ? JSON.parse(savedNotifs) : [
-      { id: 1, text: "✨ Sistema: Bienvenido al gestor de reservas de aulas UNRaf." }
-    ];
+    return savedNotifs ? JSON.parse(savedNotifs) : [{ id: 1, text: "✨ Sistema: Bienvenido al gestor de reservas de aulas UNRaf." }];
   });
 
-  useEffect(() => {
-    setLoading(false);
-  }, []);
+  useEffect(() => { setLoading(false); }, []);
 
-  // Sincronizadores estrictos con localStorage
-  useEffect(() => {
-    localStorage.setItem('universidad_reservas', JSON.stringify(reservas));
-  }, [reservas]);
-
-  useEffect(() => {
-    localStorage.setItem('universidad_notificaciones', JSON.stringify(notificaciones));
-  }, [notificaciones]);
-
-  useEffect(() => {
-    localStorage.setItem('universidad_aulas', JSON.stringify(aulas));
-  }, [aulas]);
-
-  useEffect(() => {
-    localStorage.setItem('universidad_clases', JSON.stringify(clases));
-  }, [clases]);
-
-  useEffect(() => {
-    localStorage.setItem('universidad_suscripciones', JSON.stringify(suscripciones));
-  }, [suscripciones]);
+  // Sincronizadores Reactivos
+  useEffect(() => { localStorage.setItem('universidad_reservas', JSON.stringify(reservas)); }, [reservas]);
+  useEffect(() => { localStorage.setItem('universidad_notificaciones', JSON.stringify(notificaciones)); }, [notificaciones]);
+  useEffect(() => { localStorage.setItem('universidad_aulas', JSON.stringify(aulas)); }, [aulas]);
+  useEffect(() => { localStorage.setItem('universidad_clases', JSON.stringify(clases)); }, [clases]);
+  useEffect(() => { localStorage.setItem('universidad_suscripciones', JSON.stringify(suscripciones)); }, [suscripciones]);
 
   const login = (userData) => {
     setUser(userData);
@@ -107,12 +115,10 @@ export const AuthProvider = ({ children }) => {
   const agregarReserva = (nuevaReserva) => {
     setReservas((prev) => {
       const nuevoId = prev.length > 0 ? Math.max(...prev.map(r => r.id)) + 1 : 1;
-      
       setNotificaciones((prevNotif) => [
         { id: Date.now(), text: `📅 Reservaste con éxito el espacio: ${nuevaReserva.aula}.` },
         ...prevNotif
       ]);
-
       return [...prev, { ...nuevaReserva, id: nuevoId, estado: 'Activa' }];
     });
   };
@@ -126,7 +132,6 @@ export const AuthProvider = ({ children }) => {
       }
       return res;
     }));
-
     setNotificaciones((prevNotif) => [
       { id: Date.now(), text: `⚠️ Tu reserva de "${aulaNombre}" fue dada de baja por el Administrador.` },
       ...prevNotif

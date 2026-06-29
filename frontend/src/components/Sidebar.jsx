@@ -9,7 +9,8 @@ import {
   ExitToApp as LogoutIcon, 
   Person as PersonIcon, 
   Inventory as StockIcon, 
-  Group as UsersIcon 
+  Group as UsersIcon,
+  AddHomeWorkOutlined as AulaIcon 
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -21,7 +22,15 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
   const menuItems = [
     { text: 'Mis Clases', path: '/clases', icon: <ClassIcon />, roles: ['student', 'teacher'] },
     { text: 'Reservar Aulas', path: '/reservar', icon: <CalendarIcon />, roles: ['student', 'teacher'] },
-    { text: 'Reservas Históricas', path: '/reservas', icon: <HistoryIcon />, roles: ['student', 'teacher', 'admin'] },
+    
+    // 🔥 CAMBIO AQUÍ: El texto cambia dinámicamente según la credencial activa del usuario
+    { 
+      text: user?.role === 'admin' ? 'Reservas Históricas' : 'Aulas Disponibles', 
+      path: '/reservas', 
+      icon: <AulaIcon />, 
+      roles: ['student', 'teacher', 'admin'] 
+    },
+    
     { text: 'Mi Perfil', path: '/perfil', icon: <PersonIcon />, roles: ['student', 'teacher', 'admin'] },
     
     // Rutas Exclusivas del Panel de Control de Administración
