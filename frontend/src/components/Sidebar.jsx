@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Drawer, Toolbar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Box, Typography } from '@mui/material';
+import { Avatar, Drawer, Toolbar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Box, Typography } from '@mui/material';
 import { 
   Class as ClassIcon, 
   CalendarMonth as CalendarIcon, 
@@ -10,7 +10,8 @@ import {
   Person as PersonIcon, 
   Inventory as StockIcon, 
   Group as UsersIcon,
-  AddHomeWorkOutlined as AulaIcon 
+  AddHomeWorkOutlined as AulaIcon,
+  VerifiedUser as VerifiedIcon 
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -41,24 +42,72 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
 
   const drawerContent = (
     <Box sx={{ overflow: 'auto', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {user && (
-        <Box sx={{ p: 2, px: 3, mt: 1.5, mb: 1 }}>
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '500' }}
+        {user && (
+          <Box 
+            sx={{ 
+              m: 2, 
+              p: 2, 
+              borderRadius: 3, 
+              bgcolor: 'rgba(15, 92, 179, 0.04)', 
+              border: '1px solid rgba(15, 92, 179, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2
+            }}
           >
-            Credencial Activa
-          </Typography>
-          <Typography variant="h6" fontWeight="bold" sx={{ color: '#0f5cb3', mt: 0.5, fontSize: '1rem' }}>
-            {user?.name ? user.name.toUpperCase() : 'USUARIO UNRAF'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            Rol: {user.role === 'admin' ? 'Administrador' : user.role === 'teacher' ? 'Docente' : 'Estudiante'}
-          </Typography>
-        </Box>
-      )}
-      <Divider sx={{ mx: 2 }} />
+            {/* Mini Avatar del Usuario */}
+            <Avatar 
+              sx={{ 
+                width: 48, 
+                height: 48, 
+                bgcolor: '#0f5cb3', 
+                color: 'white',
+                fontWeight: 'bold',
+                boxShadow: '0px 4px 10px rgba(15,92,179,0.2)'
+              }}
+            >
+              {user?.name ? user.name[0].toUpperCase() : 'U'}
+            </Avatar>
+
+            {/* Datos Tipográficos */}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#0f5cb3', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '1px', 
+                  fontWeight: '800',
+                  fontSize: '0.65rem',
+                  mb: 0.5
+                }}
+              >
+                Credencial Activa
+              </Typography>
+              
+              <Typography variant="body1" fontWeight="bold" sx={{ color: '#1e293b', lineHeight: 1.1 }}>
+                {user?.name ? user.name : 'USUARIO UNRAF'}
+              </Typography>
+              
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#64748b', 
+                  fontWeight: '600', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5,
+                  mt: 0.5
+                }}
+              >
+                <VerifiedIcon sx={{ fontSize: '0.9rem', color: '#10b981' }} />
+                {user.role === 'admin' ? 'Administrador' : user.role === 'teacher' ? 'Docente' : 'Estudiante'}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        
+        <Divider sx={{ mx: 2, mb: 1, borderColor: '#f1f5f9' }} />
       
       <List sx={{ px: 2, mt: 1, flexGrow: 1 }}>
         {menuItems

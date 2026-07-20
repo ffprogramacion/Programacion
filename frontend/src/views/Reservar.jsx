@@ -6,7 +6,8 @@ import { AssignmentTurnedIn as DoneIcon, Layers as LayersIcon } from '@mui/icons
 import AgendaDisponibilidad from '../components/AgendaDisponibilidad';
 
 export default function Reservar() {
-  const { user, agregarReserva, aulas, clases, reservas } = useAuth();
+  // 🔥 Importamos inventario y la función de reducción
+  const { user, agregarReserva, aulas, clases, reservas, inventario, consumirRecursos } = useAuth();
   const navigate = useNavigate();
 
   // Estados del formulario
@@ -14,8 +15,10 @@ export default function Reservar() {
   const [fecha, setFecha] = useState('');
   const [horaInicio, setHoraInicio] = useState('');
   const [horaFin, setHoraFin] = useState(''); 
-  const [materiaSeleccionada, setMateriaSeleccionada] = useState(''); // 🕒 Estado para la cátedra del profesor
-  const [materiales, setMateriales] = useState({ proyector: false, notebooks: false, cables: false });
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
+
+  // 🔥 Estado actualizado: Almacena los identificadores únicos (uniqueId) de los materiales elegidos
+  const [materialesSeleccionados, setMaterialesSeleccionados] = useState([]);
 
   if (!aulas || aulas.length === 0) {
     return (
@@ -28,8 +31,13 @@ export default function Reservar() {
   // Filtramos las clases dictadas únicamente por el profesor logueado
   const misMateriasComoDocente = clases.filter(c => c.profesorId === user?.id);
 
-  const handleCheckboxChange = (e) => {
-    setMateriales({ ...materiales, [e.target.name]: e.target.checked });
+  // 🔥 Función para agregar o quitar el ID del arreglo local
+  const handleCheckboxChange = (uniqueId) => {
+    setMaterialesSeleccionados((prev) => 
+      prev.includes(uniqueId) 
+        ? prev.filter(id => id !== uniqueId) 
+        : [...prev, uniqueId]
+    );
   };
 
   const handleConfirmar = (e) => {
@@ -44,7 +52,6 @@ export default function Reservar() {
       return;
     }
 
-    // Si es profesor, es obligatorio asignar la reserva a una materia suya
     if (user?.role === 'teacher' && !materiaSeleccionada) {
       alert("Por favor selecciona a qué cátedra corresponde esta reserva.");
       return;
@@ -75,22 +82,26 @@ export default function Reservar() {
       return;
     }
 
-    const listaMateriales = Object.keys(materiales)
-      .filter(key => materiales[key])
-      .map(key => key === 'proyector' ? 'Proyector' : key === 'notebooks' ? 'Kit Netbooks' : 'Cables')
+    // 🔥 Obtener los nombres exactos basándose en los ID seleccionados
+    const listaMateriales = inventario
+      .filter(item => materialesSeleccionados.includes(item.uniqueId))
+      .map(item => item.nombre)
       .join(', ') || 'Ninguno';
 
     const nuevaReserva = {
       aula: aulaSeleccionada, 
-      solicitante: user?.name || 'Facundo Boide',
+      solicitante: user?.name || 'Usuario',
       fecha: `${fechaFormateada} - de ${horaInicio} a ${horaFin} hs`, 
       materiales: listaMateriales,
       userId: user?.id || '12345',
-      // Enlazamos la reserva a la cátedra si corresponde
       claseId: user?.role === 'teacher' ? Number(materiaSeleccionada) : null
     };
 
     agregarReserva(nuevaReserva);
+    
+    // 🔥 Descontar las unidades seleccionadas del stock global
+    consumirRecursos(materialesSeleccionados);
+
     navigate('/reservas');
   };
 
@@ -114,7 +125,6 @@ export default function Reservar() {
                 }
               </TextField>
 
-              {/* 🔥 NUEVO: Selector de cátedra exclusivo para profesores */}
               {user?.role === 'teacher' && (
                 <TextField fullWidth select label="Asignar a Cátedra" value={materiaSeleccionada} onChange={(e) => setMateriaSeleccionada(e.target.value)} margin="dense" required sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2.5 }, mt: 2 }}>
                   {misMateriasComoDocente.map((clase) => (
@@ -144,10 +154,27 @@ export default function Reservar() {
               </Stack>
 
               <Typography variant="subtitle2" sx={{ mt: 2.5, mb: 1, fontWeight: '700', color: '#475569', fontSize: '0.8rem' }}>RECURSOS ADICIONALES:</Typography>
+              
+              {/* 🔥 RENDERIZADO DINÁMICO DEL INVENTARIO */}
               <FormGroup>
-                <FormControlLabel control={<Checkbox checked={materiales.proyector} onChange={handleCheckboxChange} name="proyector" sx={{ '&.Mui-checked': { color: '#0f5cb3' } }} />} label={<Typography variant="body2" fontWeight="500">Proyector Epson</Typography>} />
-                <FormControlLabel control={<Checkbox checked={materiales.notebooks} onChange={handleCheckboxChange} name="notebooks" sx={{ '&.Mui-checked': { color: '#0f5cb3' } }} />} label={<Typography variant="body2" fontWeight="500">Kit Netbooks</Typography>} />
-                <FormControlLabel control={<Checkbox checked={materiales.cables} onChange={handleCheckboxChange} name="cables" sx={{ '&.Mui-checked': { color: '#0f5cb3' } }} />} label={<Typography variant="body2" fontWeight="500">Cables HDMI</Typography>} />
+                {inventario.map(item => (
+                  <FormControlLabel 
+                    key={item.uniqueId}
+                    control={
+                      <Checkbox 
+                        checked={materialesSeleccionados.includes(item.uniqueId)} 
+                        onChange={() => handleCheckboxChange(item.uniqueId)} 
+                        disabled={item.stock === 0} 
+                        sx={{ '&.Mui-checked': { color: item.color || '#0f5cb3' } }} 
+                      />
+                    } 
+                    label={
+                      <Typography variant="body2" fontWeight="500" color={item.stock === 0 ? 'text.disabled' : 'text.primary'}>
+                        {item.nombre} {item.stock === 0 ? '(Sin stock)' : `(${item.stock} disponibles)`}
+                      </Typography>
+                    } 
+                  />
+                ))}
               </FormGroup>
 
               <Button type="submit" variant="contained" fullWidth startIcon={<DoneIcon />} sx={{ mt: 3, textTransform: 'none', borderRadius: 2.5, backgroundColor: '#0f5cb3', fontWeight: '700', py: 1.2, '&:hover': { backgroundColor: '#0c4d96' } }}>

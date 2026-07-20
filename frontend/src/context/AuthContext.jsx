@@ -10,59 +10,47 @@ export const AuthProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
-  // 🏛️ INICIALIZADOR ROBUSTO: Respeta si el array está vacío para no inyectar "zombies"
+  // INICIALIZADOR DE AULAS
   const [aulas, setAulas] = useState(() => {
     const savedAulas = localStorage.getItem('universidad_aulas');
     if (savedAulas !== null) {
       try {
         const parsed = JSON.parse(savedAulas);
-        if (Array.isArray(parsed)) return parsed; // Acepta arrays vacíos []
+        if (Array.isArray(parsed)) return parsed;
       } catch (e) {
         console.error("Error leyendo aulas, reseteando...", e);
       }
     }
     
-    // Solo inyecta esto la primerísima vez que se entra al sistema
     const aulasPorDefecto = [
-      { 
-        id: 1, 
-        nombre: 'Laboratorio de Sistemas 1', 
-        ubicacion: 'Planta Alta - Edificio Azul', 
-        capacidad: 30, 
-        tipo: 'Informática',
-        imagen: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop',
-        descripcion: 'Laboratorio equipado con 30 estaciones de trabajo, proyectores duales y pizarrones inteligentes para clases de programación.'
-      },
-      { 
-        id: 2, 
-        nombre: 'Laboratorio de Electrónica', 
-        ubicacion: 'Planta Baja - Bloque I+D', 
-        capacidad: 20, 
-        tipo: 'Taller Técnico',
-        imagen: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop',
-        descripcion: 'Espacio acondicionado con osciloscopios, fuentes regulables y estaciones de soldado para prácticas de hardware y embebidos.'
-      },
-      { 
-        id: 3, 
-        nombre: 'Aula Magna', 
-        ubicacion: 'Bloque Central', 
-        capacidad: 120, 
-        tipo: 'Auditorio',
-        imagen: 'https://images.unsplash.com/photo-1592284988788-b21a8a25c34d?q=80&w=800&auto=format&fit=crop',
-        descripcion: 'Auditorio principal con acústica profesional, sistema de microfonía y pantalla gigante para conferencias y seminarios masivos.'
-      },
-      { 
-        id: 4, 
-        nombre: 'Sala de Estudio Común', 
-        ubicacion: 'Anexo Biblioteca', 
-        capacidad: 15, 
-        tipo: 'Estudio',
-        imagen: 'https://images.unsplash.com/photo-1577416412292-747c6607f055?q=80&w=800&auto=format&fit=crop',
-        descripcion: 'Espacio silencioso para lectura y trabajos en grupos reducidos. Cuenta con tomas de corriente en cada mesa.'
-      },
+      { id: 1, nombre: 'Laboratorio de Sistemas 1', ubicacion: 'Planta Alta - Edificio Azul', capacidad: 30, tipo: 'Informática', imagen: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop', descripcion: 'Laboratorio equipado con 30 estaciones de trabajo, proyectores duales y pizarrones inteligentes para clases de programación.' },
+      { id: 2, nombre: 'Laboratorio de Electrónica', ubicacion: 'Planta Baja - Bloque I+D', capacidad: 20, tipo: 'Taller Técnico', imagen: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=800&auto=format&fit=crop', descripcion: 'Espacio acondicionado con osciloscopios, fuentes regulables y estaciones de soldado para prácticas de hardware y embebidos.' },
+      { id: 3, nombre: 'Aula Magna', ubicacion: 'Bloque Central', capacidad: 120, tipo: 'Auditorio', imagen: 'https://images.unsplash.com/photo-1592284988788-b21a8a25c34d?q=80&w=800&auto=format&fit=crop', descripcion: 'Auditorio principal con acústica profesional, sistema de microfonía y pantalla gigante para conferencias y seminarios masivos.' },
+      { id: 4, nombre: 'Sala de Estudio Común', ubicacion: 'Anexo Biblioteca', capacidad: 15, tipo: 'Estudio', imagen: 'https://images.unsplash.com/photo-1577416412292-747c6607f055?q=80&w=800&auto=format&fit=crop', descripcion: 'Espacio silencioso para lectura y trabajos en grupos reducidos. Cuenta con tomas de corriente en cada mesa.' },
     ];
     localStorage.setItem('universidad_aulas', JSON.stringify(aulasPorDefecto));
     return aulasPorDefecto;
+  });
+
+  // 🔥 NUEVO: INICIALIZADOR DE INVENTARIO
+  const [inventario, setInventario] = useState(() => {
+    const savedInv = localStorage.getItem('universidad_inventario');
+    if (savedInv !== null) {
+      try {
+        const parsed = JSON.parse(savedInv);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.error("Error leyendo inventario, reseteando...", e);
+      }
+    }
+    
+    const invPorDefecto = [
+      { uniqueId: 1, id: 'proyector', nombre: 'Proyectores Epson X51', stock: 3, total: 5, color: '#0f5cb3' },
+      { uniqueId: 2, id: 'notebooks', nombre: 'Kits Netbooks Educativas', stock: 2, total: 4, color: '#00a896' },
+      { uniqueId: 3, id: 'cables', nombre: 'Adaptadores HDMI / VGA', stock: 7, total: 10, color: '#fbc02d' },
+    ];
+    localStorage.setItem('universidad_inventario', JSON.stringify(invPorDefecto));
+    return invPorDefecto;
   });
 
   const [clases, setClases] = useState(() => {
@@ -81,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   const [reservas, setReservas] = useState(() => {
     const savedReservas = localStorage.getItem('universidad_reservas');
     return savedReservas ? JSON.parse(savedReservas) : [
-      { id: 1, aula: 'Laboratorio de Sistemas 1', solicitante: 'Facundo Boide', fecha: '12/06/2026 - de 14:00 a 16:00 hs', materiales: 'Proyector Epson', estado: 'Activa', userId: '12345', claseId: null },
+      { id: 1, aula: 'Laboratorio de Sistemas 1', solicitante: 'Usuario Universitario', fecha: '12/06/2026 - de 14:00 a 16:00 hs', materiales: 'Proyectores Epson X51', estado: 'Activa', userId: '12345', claseId: null },
       { id: 2, aula: 'Aula Magna', solicitante: 'Ing. Milton', fecha: '15/06/2026 - de 09:00 a 12:00 hs', materiales: 'Ninguno', estado: 'Activa', userId: 'prof-1', claseId: 1 }
     ];
   });
@@ -93,12 +81,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => { setLoading(false); }, []);
 
-  // Sincronizadores Reactivos
+  // Sincronizadores Reactivos Estables
   useEffect(() => { localStorage.setItem('universidad_reservas', JSON.stringify(reservas)); }, [reservas]);
   useEffect(() => { localStorage.setItem('universidad_notificaciones', JSON.stringify(notificaciones)); }, [notificaciones]);
   useEffect(() => { localStorage.setItem('universidad_aulas', JSON.stringify(aulas)); }, [aulas]);
   useEffect(() => { localStorage.setItem('universidad_clases', JSON.stringify(clases)); }, [clases]);
   useEffect(() => { localStorage.setItem('universidad_suscripciones', JSON.stringify(suscripciones)); }, [suscripciones]);
+  useEffect(() => { localStorage.setItem('universidad_inventario', JSON.stringify(inventario)); }, [inventario]); // 🔥 NUEVO
 
   const login = (userData) => {
     setUser(userData);
@@ -138,6 +127,23 @@ export const AuthProvider = ({ children }) => {
     ]);
   };
 
+// 🔥 NUEVO: Función para reducir el stock en tiempo real (BLINDADA CON GUARDADO FORZADO)
+  const consumirRecursos = (idsConsumidos) => {
+    if (!idsConsumidos || idsConsumidos.length === 0) return;
+    
+    setInventario((prev) => {
+      const nuevoInv = prev.map(item => {
+        if (idsConsumidos.includes(item.uniqueId) && item.stock > 0) {
+          return { ...item, stock: item.stock - 1 };
+        }
+        return item;
+      });
+      // Escribimos en el disco en el microsegundo exacto en que se cambia la variable
+      localStorage.setItem('universidad_inventario', JSON.stringify(nuevoInv));
+      return nuevoInv;
+    });
+  };
+
   const limpiarNotificaciones = () => setNotificaciones([]);
 
   return (
@@ -145,7 +151,8 @@ export const AuthProvider = ({ children }) => {
       user, loading, login, logout, setUser, 
       reservas, agregarReserva, cancelarReserva,
       notificaciones, limpiarNotificaciones,
-      aulas, setAulas, clases, setClases, suscripciones, setSuscripciones
+      aulas, setAulas, clases, setClases, suscripciones, setSuscripciones,
+      inventario, setInventario, consumirRecursos // 🔥 EXPUESTOS AL CONTEXTO
     }}>
       {children}
     </AuthContext.Provider>

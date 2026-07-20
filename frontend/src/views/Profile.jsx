@@ -1,7 +1,27 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Box, Card, CardContent, Avatar, Grid, TextField, Typography, List, ListItem, ListItemText, Divider, Chip, Stack } from '@mui/material';
-import { AccountCircle as UserIcon, History as HistoryIcon, Room as RoomIcon, CalendarMonth as CalendarIcon } from '@mui/icons-material';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Avatar, 
+  Grid, 
+  Typography, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  Divider, 
+  Chip, 
+  Stack 
+} from '@mui/material';
+import { 
+  AccountCircle as UserIcon, 
+  History as HistoryIcon, 
+  Room as RoomIcon, 
+  CalendarMonth as CalendarIcon,
+  Badge as BadgeIcon, 
+  VerifiedUser as VerifiedIcon 
+} from '@mui/icons-material';
 
 export default function Profile() {
   const { user, reservas } = useAuth();
@@ -45,19 +65,69 @@ export default function Profile() {
   return (
     <Box sx={{ width: '100%' }}>
       
-      {/* TARJETA DE PERFIL (DATOS INSTITUCIONALES) */}
-      <Card sx={{ borderRadius: 4, boxShadow: '0px 4px 20px rgba(0,0,0,0.02)', border: '1px solid #eef2f6', mb: 4 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Avatar sx={{ width: 100, height: 100, fontSize: 40, bgcolor: '#0f5cb3', boxShadow: '0px 8px 20px rgba(15,92,179,0.15)' }}>
-                {user?.name ? user.name[0].toUpperCase() : <UserIcon />}
+      {/* TARJETA DE PERFIL (CREDENCIAL DIGITAL INSTITUCIONAL) */}
+      <Card sx={{ borderRadius: 4, boxShadow: '0px 10px 30px rgba(15,92,179,0.05)', border: '1px solid #eef2f6', mb: 4, overflow: 'hidden' }}>
+        
+        {/* Banner de Portada Superior */}
+        <Box 
+          sx={{ 
+            height: 120, 
+            bgcolor: '#0f5cb3', 
+            backgroundImage: 'linear-gradient(120deg, #0f5cb3 0%, #00a896 100%)' 
+          }} 
+        />
+
+        <CardContent sx={{ p: 4, pt: 0, position: 'relative' }}>
+          <Grid container spacing={3}>
+            
+            {/* Avatar flotante desplazado hacia arriba */}
+            <Grid item xs={12} sm={3} sx={{ display: 'flex', justifyContent: 'center', mt: -6 }}>
+              <Avatar 
+                sx={{ 
+                  width: 130, 
+                  height: 130, 
+                  fontSize: 50, 
+                  bgcolor: 'white', 
+                  color: '#0f5cb3',
+                  boxShadow: '0px 8px 24px rgba(15,92,179,0.2)',
+                  border: '5px solid white',
+                  fontWeight: 'bold'
+                }}
+              >
+                {user?.name ? user.name[0].toUpperCase() : <UserIcon fontSize="large" />}
               </Avatar>
             </Grid>
-            <Grid item xs={12} sm={9}>
-              <Typography variant="h6" fontWeight="700" sx={{ mb: 1, color: '#1e293b' }}>Información del Usuario</Typography>
-              <TextField fullWidth label="Nombre y Apellido" value={user?.name || ''} disabled margin="dense" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
-              <TextField fullWidth label="Rol del Sistema" value={user?.role ? user.role.toUpperCase() : ''} disabled margin="dense" sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, mt: 2 }} />
+
+            {/* Información del Usuario Tipográfica */}
+            <Grid item xs={12} sm={9} sx={{ mt: { xs: 2, sm: 2 }, textAlign: { xs: 'center', sm: 'left' } }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'center', sm: 'flex-start' }, justifyContent: 'space-between', mb: 2 }}>
+                <Box>
+                  <Typography variant="h4" fontWeight="800" sx={{ color: '#1e293b', letterSpacing: '-0.5px' }}>
+                    {user?.name || 'Usuario Universitario'}
+                  </Typography>
+                  <Typography variant="body1" fontWeight="500" sx={{ color: '#64748b', mt: 0.5 }}>
+                    Comunidad Académica
+                  </Typography>
+                </Box>
+                
+                {/* Chip decorativo para el Rol */}
+                <Chip 
+                  label={user?.role ? `ROL: ${user.role.toUpperCase()}` : 'ESTUDIANTE'} 
+                  icon={<BadgeIcon sx={{ color: '#0f5cb3 !important' }} />}
+                  sx={{ 
+                    mt: { xs: 2, sm: 0 },
+                    bgcolor: 'rgba(15, 92, 179, 0.08)', 
+                    color: '#0f5cb3', 
+                    fontWeight: '700',
+                    borderRadius: '10px',
+                    px: 1,
+                    py: 2.5
+                  }} 
+                />
+              </Box>
+
+              <Divider sx={{ my: 2.5, borderColor: '#f1f5f9' }} />
+
             </Grid>
           </Grid>
         </CardContent>
@@ -81,7 +151,7 @@ export default function Profile() {
             </Box>
           ) : (
             <List disablePadding>
-              {misReservasHistoricas.slice().reverse().map((res, index) => { // .slice().reverse() muestra la última que se hizo primero
+              {misReservasHistoricas.slice().reverse().map((res, index) => {
                 const vigencia = obtenerEstadoVigencia(res);
                 return (
                   <React.Fragment key={res.id}>
@@ -96,7 +166,6 @@ export default function Profile() {
                               </Typography>
                             </Box>
                             
-                            {/* BADGE DINÁMICO DE ESTADO */}
                             <Chip 
                               label={vigencia.label} 
                               color={vigencia.color}
@@ -107,7 +176,6 @@ export default function Profile() {
                                 borderRadius: '6px', 
                                 fontSize: '0.7rem',
                                 minWidth: 80,
-                                // Pequeño ajuste estético para el estado "Finalizada"
                                 ...(vigencia.label === 'Finalizada' && { bgcolor: '#e2e8f0', color: '#475569' })
                               }} 
                             />
