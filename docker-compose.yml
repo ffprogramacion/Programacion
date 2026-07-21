@@ -1,62 +1,69 @@
 services:
- # ---------- BASE DE DATOS: PostgreSQL ----------
-db:
- image: postgres:16
- container_name: app9-db
- restart: always
- environment:
-  - POSTGRES_DB=${POSTGRES_DB}
-  - POSTGRES_USER=${POSTGRES_USER}
-  - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
- volumes:
-  - app9-db-data:/var/lib/postgresql/data
- networks:
-  - nginx-proxy
- deploy:
-  resources:
-    limits:
-      memory: 256m
+  # ---------- BASE DE DATOS: PostgreSQL ----------
+  db:
+    image: postgres:16
+    container_name: app9-db
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - app9-db-data:/var/lib/postgresql/data
+    networks:
+      - nginx-proxy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
- # ---------- BACKEND: Django ----------
-backend:
- build: ./backend
- container_name: app9-backend
- restart: always
- depends_on:
-  - db
- environment:
-  - VIRTUAL_HOST=api.app9.academia.ar
-  - VIRTUAL_PORT=8000
-  - LETSENCRYPT_HOST=api.app9.academia.ar
-  - LETSENCRYPT_EMAIL=admin@academia.ar
-  - DJANGO_ALLOWED_HOSTS=api.app9.academia.ar,localhost,127.0.0.1
-  - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
- networks:
-  - nginx-proxy
- deploy:
-  resources:
-    limits:
-      memory: 384m
-# ---------- FRONTEND: React + Nginx ----------
-frontend:
- build: ./frontend
- container_name: app9-frontend
- restart: always
- depends_on:
-  - backend
- environment:
-  - VIRTUAL_HOST=app9.academia.ar
-  - VIRTUAL_PORT=80
-  - LETSENCRYPT_HOST=app9.academia.ar
-  - LETSENCRYPT_EMAIL=admin@academia.ar
- networks:
-  - nginx-proxy
- deploy:
-  resources:
-    limits:
-      memory: 128m
+  # ---------- BACKEND: Django ----------
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    container_name: app9-backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - VIRTUAL_HOST=api.app9.academia.ar
+      - VIRTUAL_PORT=8000
+      - LETSENCRYPT_HOST=api.app9.academia.ar
+      - LETSENCRYPT_EMAIL=admin@academia.ar
+      - DJANGO_ALLOWED_HOSTS=api.app9.academia.ar,localhost,127.0.0.1
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    networks:
+      - nginx-proxy
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
+  # ---------- FRONTEND: React + Nginx ----------
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    container_name: app9-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      - VIRTUAL_HOST=app9.academia.ar
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=app9.academia.ar
+      - LETSENCRYPT_EMAIL=admin@academia.ar
+    networks:
+      - nginx-proxy
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
 volumes:
   app9-db-data:
+
 networks:
- nginx-proxy:
-  external: true      
+  nginx-proxy:
+    external: true
