@@ -20,8 +20,6 @@ services:
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
     container_name: app9-backend
     restart: always
     depends_on:
