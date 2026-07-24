@@ -20,9 +20,6 @@ services:
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
-    ports:
-      - "8000:8000"
     container_name: app9-backend
     restart: always
     depends_on:
@@ -44,8 +41,6 @@ services:
   # ---------- FRONTEND: React + Nginx ----------
   frontend:
     build: ./frontend
-    ports:
-      - "80:80"
     container_name: app9-frontend
     restart: always
     depends_on:
