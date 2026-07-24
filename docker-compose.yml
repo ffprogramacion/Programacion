@@ -16,7 +16,6 @@ services:
       resources:
         limits:
           memory: 256m
-
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
@@ -37,7 +36,6 @@ services:
       resources:
         limits:
           memory: 384m
-
   # ---------- FRONTEND: React + Nginx ----------
   frontend:
     build: ./frontend
@@ -56,10 +54,9 @@ services:
       resources:
         limits:
           memory: 128m
-
-volumes:
-  app9-db-data:
-
-networks:
-  nginx-proxy:
+volumes: 
+  app9-db-data: 
+networks: 
+  nginx-proxy: 
     external: true
+
