@@ -16,12 +16,10 @@ services:
       resources:
         limits:
           memory: 256m
+
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
-    ports:
-      - "8000:8000"
     container_name: app9-backend
     restart: always
     depends_on:
@@ -39,6 +37,7 @@ services:
       resources:
         limits:
           memory: 384m
+
   # ---------- FRONTEND: React + Nginx ----------
   frontend:
     build: ./frontend
@@ -57,9 +56,10 @@ services:
       resources:
         limits:
           memory: 128m
-volumes: 
-  app9-db-data: 
-networks: 
-  nginx-proxy: 
-    external: true
 
+volumes:
+  app9-db-data:
+
+networks:
+  nginx-proxy:
+    external: true
