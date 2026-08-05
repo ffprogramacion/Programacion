@@ -67,4 +67,3 @@ volumes:
 networks: 
   nginx-proxy: 
     external: true
-
