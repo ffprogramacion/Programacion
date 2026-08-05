@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # ---------- BASE DE DATOS: PostgreSQL ----------
   db:
@@ -20,8 +22,7 @@ services:
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    image: app9-backend-v2
     container_name: app9-backend
     restart: always
     depends_on:
@@ -43,6 +44,7 @@ services:
   # ---------- FRONTEND: React + Nginx ----------
   frontend:
     build: ./frontend
+    image: app9-frontend-v2
     container_name: app9-frontend
     restart: always
     depends_on:
@@ -58,8 +60,10 @@ services:
       resources:
         limits:
           memory: 128m
+
 volumes: 
   app9-db-data: 
+
 networks: 
   nginx-proxy: 
     external: true
