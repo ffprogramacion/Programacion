@@ -1,115 +1,120 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
+import api from '../service/api.js'; // Usamos la instancia con interceptores
 import { 
   Box, Card, CardContent, TextField, Button, Typography, 
-  MenuItem, Container, CssBaseline, InputAdornment, IconButton, Link 
+  MenuItem, Container, CssBaseline, InputAdornment, IconButton, Link, Alert
 } from '@mui/material';
 import { 
-  AccountCircle, Lock, Visibility, VisibilityOff, 
-  School, ArrowDropDown 
+  AccountCircle, Lock, Visibility, VisibilityOff, ArrowDropDown 
 } from '@mui/icons-material';
-import logoUnraf from '../assets/logo-unraf.png'; // Asegúrate de tener el logo en esta ruta
+import logoUnraf from '../assets/logo-unraf.png';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login } = useAuth(); 
   const navigate = useNavigate();
   
-  // 0 = Iniciar Sesión, 1 = Registrarse (Mismo comportamiento lógico de antes)
   const [isRegister, setIsRegister] = useState(false);
   
+  // Campos del Formulario
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('student');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Mapeo de roles internos con las etiquetas visuales del diseño
-  const roleLabels = {
-    student: 'Estudiante',
-    teacher: 'Docente',
-    admin: 'Admin'
-  };
+  // Estados de carga y error
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!isRegister) {
-      let assignedRole = role; // Toma el seleccionado en el dropdown
-      // Mantiene tu atajo por texto si escriben la palabra
-      if (email.toLowerCase().includes('profesor')) assignedRole = 'teacher';
-      if (email.toLowerCase().includes('admin')) assignedRole = 'admin';
+    setError('');
+    setLoading(true);
 
-      login({ 
-        name: email.split('@')[0] || "Usuario", 
-        role: assignedRole, 
-        id: "12345" 
-      });
-    } else {
-      login({ 
-        name: fullName || "Nuevo Usuario", 
-        role: role, 
-        id: "67890" 
-      });
+    try {
+      if (!isRegister) {
+        // ----------------------------------------------------
+        // 1. PETICIÓN DE LOGIN (Obtener Token JWT)
+        // ----------------------------------------------------
+        const tokenRes = await api.post('/token/', {
+          username: username,
+          password: password
+        });
+
+        const { access, refresh } = tokenRes.data;
+        // Guardamos los tokens en localStorage
+        localStorage.setItem('accessToken', access);
+        localStorage.setItem('refreshToken', refresh);
+
+        // ----------------------------------------------------
+        // 2. OBTENER PERFIL DEL USUARIO (/api/me/)
+        // (El interceptor adjunta el header Bearer automáticamente)
+        // ----------------------------------------------------
+        const userRes = await api.get('/me/');
+
+        // Guardamos usuario en el Contexto Global
+        login(userRes.data, access);
+        navigate('/clases', { replace: true });
+
+      } else {
+        // ----------------------------------------------------
+        // 3. PETICIÓN DE REGISTRO (/api/register/)
+        // ----------------------------------------------------
+        const [firstName, ...lastNameArray] = fullName.trim().split(' ');
+        const lastName = lastNameArray.join(' ');
+
+        await api.post('/register/', {
+          username: username,
+          email: email,
+          password: password,
+          first_name: firstName || '',
+          last_name: lastName || '',
+          profile: {
+            rol: role
+          }
+        });
+
+        // Al registrar exitosamente, cambiamos a modo Login
+        setIsRegister(false);
+        setError('¡Cuenta creada con éxito! Por favor iniciá sesión.');
+      }
+    } catch (err) {
+      console.error(err);
+      if (err.response && err.response.data) {
+        // Muestra el error formateado devuelto por Django REST Framework
+        const msg = typeof err.response.data === 'object' 
+          ? JSON.stringify(err.response.data) 
+          : err.response.data;
+        setError(`Error: ${msg}`);
+      } else {
+        setError('Error de conexión con el servidor.');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    navigate('/clases', { replace: true });
   };
 
   return (
     <Box 
       sx={{ 
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'linear-gradient(135deg, #0f5cb3 0%, #114682 100%)',
-      
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center', 
-      justifyContent: 'center',
-      overflowY: 'auto',
-      p: 2
+        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+        background: 'linear-gradient(135deg, #0f5cb3 0%, #114682 100%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+        justifyContent: 'center', overflowY: 'auto', p: 2
       }}
     >
       <CssBaseline />
       
-  <Box 
-    sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', // Los elementos se apilan verticalmente
-      alignItems: 'center',    // Centra horizontalmente imagen y texto
-      justifyContent: 'center', 
-      mb: 4, 
-      mt: 2  
-    }}
-  >
-    {/* Imagen del Logo */}
-    <img 
-      src={logoUnraf} 
-      alt="Logo Institucional UNRaf" 
-      style={{ 
-        width: 'auto', 
-        height: '155px', 
-        objectFit: 'contain',
-        marginBottom: '12px' // Espacio entre el logo y el texto de abajo
-      }} 
-    />
-    <Typography 
-    variant="body2" 
-    sx={{ 
-      color: 'white', 
-      fontWeight: '500', 
-      letterSpacing: '1px',
-      textTransform: 'uppercase', // Opcional: le da un toque más formal/institucional
-      opacity: 0.9 // Un poquito de transparencia para que no distraiga de la tarjeta principal
-    }}
-  >
-    UNRaf - Sistema de reserva de aulas
-  </Typography>
-    </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4, mt: 2 }}>
+        <img src={logoUnraf} alt="Logo UNRaf" style={{ height: '155px', marginBottom: '12px' }} />
+        <Typography variant="body2" sx={{ color: 'white', fontWeight: '500', letterSpacing: '1px', textTransform: 'uppercase', opacity: 0.9 }}>
+          UNRaf - Sistema de reserva de aulas
+        </Typography>
+      </Box>
+
       <Container maxWidth="xs" disableGutters>
         <Card sx={{ borderRadius: 4, boxShadow: '0px 10px 30px rgba(0,0,0,0.15)', p: 1 }}>
           <CardContent sx={{ p: 3 }}>
@@ -117,34 +122,28 @@ export default function Login() {
             <Typography variant="h5" fontWeight="bold" sx={{ color: '#212121', mb: 0.5 }}>
               {isRegister ? 'Crear Perfil' : 'Iniciar Sesión'}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {isRegister ? 'Completa tus datos de registro' : 'Ingresa con tus credenciales institucionales'}
             </Typography>
 
+            {/* Alerta para mostrar Errores o Mensajes de Éxito */}
+            {error && (
+              <Alert severity={error.includes('éxito') ? 'success' : 'error'} sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             <Box component="form" onSubmit={handleSubmit}>
-              {isRegister && (
-                <TextField 
-                  fullWidth 
-                  label="Nombre Completo" 
-                  variant="outlined" 
-                  margin="normal" 
-                  required 
-                  value={fullName} 
-                  onChange={(e) => setFullName(e.target.value)}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-                />
-              )}
               
-              {/* Input de Correo Institucional */}
+              {/* Usuario */}
               <TextField 
                 fullWidth 
-                label="Correo Institucional" 
+                label="Usuario" 
                 variant="outlined" 
                 margin="normal" 
                 required 
-                placeholder="usuario@universidad.edu"
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)}
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -154,8 +153,34 @@ export default function Login() {
                 }}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
+
+              {isRegister && (
+                <>
+                  <TextField 
+                    fullWidth 
+                    label="Nombre Completo" 
+                    variant="outlined" 
+                    margin="normal" 
+                    required 
+                    value={fullName} 
+                    onChange={(e) => setFullName(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                  <TextField 
+                    fullWidth 
+                    label="Correo Institucional" 
+                    type="email"
+                    variant="outlined" 
+                    margin="normal" 
+                    required 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  />
+                </>
+              )}
               
-              {/* Input de Contraseña */}
+              {/* Contraseña */}
               <TextField 
                 fullWidth 
                 label="Contraseña" 
@@ -182,54 +207,54 @@ export default function Login() {
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
               
-              {/* Selector de Rol Dinámico */}
-              <TextField 
-                fullWidth 
-                select 
-                label="Rol" 
-                value={role} 
-                onChange={(e) => setRole(e.target.value)} 
-                margin="normal"
-                InputProps={{
-                  endAdornment: <ArrowDropDown sx={{ pointerEvents: 'none', mr: 1, color: 'action.active' }} />
-                }}
-                SelectProps={{ IconComponent: () => null }} // Quitamos el icono por defecto para usar el del Figma
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-              >
-                <MenuItem value="student">Estudiante</MenuItem>
-                <MenuItem value="teacher">Docente</MenuItem>
-                <MenuItem value="admin">Administrador</MenuItem>
-              </TextField>
+              {/* Selector de Rol en Registro */}
+              {isRegister && (
+                <TextField 
+                  fullWidth 
+                  select 
+                  label="Rol" 
+                  value={role} 
+                  onChange={(e) => setRole(e.target.value)} 
+                  margin="normal"
+                  InputProps={{
+                    endAdornment: <ArrowDropDown sx={{ pointerEvents: 'none', mr: 1, color: 'action.active' }} />
+                  }}
+                  SelectProps={{ IconComponent: () => null }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                >
+                  <MenuItem value="student">Estudiante</MenuItem>
+                  <MenuItem value="teacher">Docente</MenuItem>
+                  <MenuItem value="admin">Administrador</MenuItem>
+                </TextField>
+              )}
 
-              {/* Botón Principal azul redondeado */}
+              {/* Botón Principal */}
               <Button 
                 type="submit" 
                 fullWidth 
                 variant="contained" 
                 size="large" 
+                disabled={loading}
                 sx={{ 
-                  mt: 3, 
-                  mb: 4, 
-                  py: 1.6, 
-                  fontWeight: 'bold', 
-                  borderRadius: 3,
-                  fontSize: '16px',
-                  backgroundColor: '#1976d2',
-                  textTransform: 'none',
+                  mt: 3, mb: 3, py: 1.6, fontWeight: 'bold', borderRadius: 3,
+                  fontSize: '16px', backgroundColor: '#1976d2', textTransform: 'none',
                   '&:hover': { backgroundColor: '#115293' }
                 }}
               >
-                {isRegister ? 'Registrarse' : 'Ingresar'}
+                {loading ? 'Cargando...' : (isRegister ? 'Registrarse' : 'Ingresar')}
               </Button>
 
-              {/* Enrutador alternativo inferior */}
-              <Box sx={{ textAlign: 'center', mt: 2 }}>
+              {/* Link para alternar Registro/Login */}
+              <Box sx={{ textAlign: 'center', mt: 1 }}>
                 <Link 
                   component="button" 
                   type="button"
                   variant="body2" 
-                  onClick={() => setIsRegister(!isRegister)}
-                  sx={{ underline: 'hover', fontWeight: 'medium', color: '#1976d2', textDecoration: 'none' }}
+                  onClick={() => {
+                    setIsRegister(!isRegister);
+                    setError('');
+                  }}
+                  sx={{ fontWeight: 'medium', color: '#1976d2', textDecoration: 'none' }}
                 >
                   {isRegister ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate'}
                 </Link>
