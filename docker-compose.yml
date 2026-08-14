@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # ---------- BASE DE DATOS: PostgreSQL ----------
   db:
@@ -69,9 +71,9 @@ services:
         limits:
           memory: 128m
 
-volumes:
-  app9-db-data:
+volumes: 
+  app9-db-data: 
 
-networks:
-  nginx-proxy:
+networks: 
+  nginx-proxy: 
     external: true
