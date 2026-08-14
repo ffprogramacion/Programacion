@@ -5,18 +5,28 @@ import { useAuth } from '../context/AuthContext';
 export default function ProtectedRoute({ roles }) {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Cargando...</div>; // O un Spinner de MUI
+  // 1. Mientas se verifica el token contra la API de Django
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Cargando sesión...</p>
+      </div>
+    );
+  }
 
-  // 1. Si no hay usuario logueado -> Redirigir a Login
+  // 2. Si no hay usuario autenticado -> Redirigir al Login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Si el rol del usuario no está dentro de los roles permitidos -> Redirigir a Clases
-  if (roles && !roles.includes(user.role)) {
+  // 3. Normalizamos la verificación del rol (soporta tanto user.role como user.rol)
+  const userRole = user.role || user.rol;
+
+  // 4. Si la ruta requiere roles específicos y el usuario no los posee
+  if (roles && (!userRole || !roles.includes(userRole))) {
     return <Navigate to="/clases" replace />;
   }
 
-  // 3. Si pasa las validaciones, renderizar las rutas hijas
+  // 5. Autenticado y autorizado -> Renderiza los componentes hijos
   return <Outlet />;
 }

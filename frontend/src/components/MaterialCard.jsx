@@ -9,35 +9,62 @@ import {
   Remove as RemoveIcon 
 } from '@mui/icons-material';
 
-// Mapeo dinámico para renderizar el icono según lo que elija o cree el Admin
-const iconMap = {
-  proyector: <ProyectorIcon fontSize="large" />,
-  notebooks: <LaptopIcon fontSize="large" />,
-  cables: <CableIcon fontSize="large" />,
-  default: <DefaultIcon fontSize="large" />
+// 🔄 Asignación inteligente de íconos basada en el nombre del material
+const getIconMap = (nombre) => {
+  if (!nombre) return <DefaultIcon fontSize="large" />;
+  
+  const nombreNormalizado = nombre.toLowerCase();
+  
+  if (nombreNormalizado.includes('proyector') || nombreNormalizado.includes('cañón')) {
+    return <ProyectorIcon fontSize="large" />;
+  }
+  if (nombreNormalizado.includes('notebook') || nombreNormalizado.includes('laptop') || nombreNormalizado.includes('pc')) {
+    return <LaptopIcon fontSize="large" />;
+  }
+  if (nombreNormalizado.includes('cable') || nombreNormalizado.includes('alargue') || nombreNormalizado.includes('adaptador')) {
+    return <CableIcon fontSize="large" />;
+  }
+  
+  return <DefaultIcon fontSize="large" />;
 };
 
 export default function MaterialCard({ item, onStockChange }) {
-  // Si el tipo de icono no existe en el mapa, usa el por defecto
-  const renderIcon = iconMap[item.id] || iconMap['default'];
+  const renderIcon = getIconMap(item.nombre);
+  
+  // Prevención de fallos si la API no envía un color definido (usamos el institucional)
+  const cardColor = item.color || '#0f5cb3'; 
+  
+  // Valores por defecto seguros para evitar NaN o divisiones por cero
+  const total = item.total || 0;
+  const stock = item.stock || 0;
+  const porcentajeOcupacion = total > 0 ? ((total - stock) / total * 100).toFixed(0) : 0;
 
   return (
     <Grid item xs={12} md={4}>
-      <Card sx={{ borderRadius: 3, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', borderTop: `6px solid ${item.color}`, height: '100%' }}>
+      <Card 
+        sx={{ 
+          borderRadius: 3, 
+          boxShadow: '0px 4px 20px rgba(0,0,0,0.05)', 
+          borderTop: `6px solid ${cardColor}`, 
+          height: '100%' 
+        }}
+      >
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Avatar sx={{ bgcolor: `${item.color}15`, color: item.color, width: 56, height: 56 }}>
+            <Avatar sx={{ bgcolor: `${cardColor}15`, color: cardColor, width: 56, height: 56 }}>
               {renderIcon}
             </Avatar>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="h4" fontWeight="bold" color="text.primary">{item.stock}</Typography>
-              <Typography variant="caption" color="text.secondary">Disponibles de {item.total}</Typography>
+              <Typography variant="h4" fontWeight="bold" color="text.primary">{stock}</Typography>
+              <Typography variant="caption" color="text.secondary">Disponibles de {total}</Typography>
             </Box>
           </Box>
 
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>{item.nombre}</Typography>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            {item.nombre}
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Nivel de ocupación actual: {item.total > 0 ? ((item.total - item.stock) / item.total * 100).toFixed(0) : 0}%
+            Nivel de ocupación actual: {porcentajeOcupacion}%
           </Typography>
 
           <Stack direction="row" spacing={2}>
@@ -46,9 +73,10 @@ export default function MaterialCard({ item, onStockChange }) {
               variant="outlined" 
               startIcon={<RemoveIcon />} 
               color="error" 
-              onClick={() => onStockChange(item.uniqueId, false)} 
+              // 🚀 Cambio crítico: usamos item.id estándar de DB
+              onClick={() => onStockChange(item.id, false)} 
               sx={{ borderRadius: 2, textTransform: 'none' }}
-              disabled={item.stock === 0}
+              disabled={stock === 0}
             >
               Prestar
             </Button>
@@ -57,9 +85,10 @@ export default function MaterialCard({ item, onStockChange }) {
               variant="contained" 
               startIcon={<AddIcon />} 
               color="success" 
-              onClick={() => onStockChange(item.uniqueId, true)} 
-              sx={{ borderRadius: 2, textTransform: 'none' }}
-              disabled={item.stock === item.total}
+              // 🚀 Cambio crítico: usamos item.id estándar de DB
+              onClick={() => onStockChange(item.id, true)} 
+              sx={{ borderRadius: 2, textTransform: 'none', boxShadow: 'none' }}
+              disabled={stock === total}
             >
               Devolver
             </Button>

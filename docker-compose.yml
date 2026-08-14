@@ -8,6 +8,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - app9-db-data:/var/lib/postgresql/data
     networks:
@@ -20,10 +25,13 @@ services:
   # ---------- BACKEND: Django ----------
   backend:
     build: ./backend
+    ports:
+      - "8000:8000"
     container_name: app9-backend
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - VIRTUAL_HOST=api.app9.academia.ar
       - VIRTUAL_PORT=8000
@@ -31,6 +39,8 @@ services:
       - LETSENCRYPT_EMAIL=admin@academia.ar
       - DJANGO_ALLOWED_HOSTS=api.app9.academia.ar,localhost,127.0.0.1
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
     networks:
       - nginx-proxy
     deploy:
@@ -41,6 +51,8 @@ services:
   # ---------- FRONTEND: React + Nginx ----------
   frontend:
     build: ./frontend
+    ports:
+      - "80:80"
     container_name: app9-frontend
     restart: always
     depends_on:

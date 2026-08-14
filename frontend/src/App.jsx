@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { AuthProvider } from './context/AuthContext';
 import AppShell from './components/AppShell';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -30,8 +29,8 @@ function App() {
           {/* Redirección por Defecto desde la Raíz */}
           <Route path="/" element={<Navigate to="/clases" replace />} />
 
-          {/* Rutas Autenticadas (Estudiantes, Docentes y Admin) */}
-          <Route element={<ProtectedRoute roles={['student', 'teacher', 'admin']} />}>
+          {/* Rutas Autenticadas (Soporta nombres en inglés y español para el rol) */}
+          <Route element={<ProtectedRoute roles={['student', 'teacher', 'admin', 'estudiante', 'profesor', 'docente']} />}>
             <Route element={<AppShell />}>
               
               {/* Vistas Generales */}
@@ -40,8 +39,8 @@ function App() {
               <Route path="/reservas" element={<Reservas />} />
               <Route path="/perfil" element={<Profile />} />
 
-              {/* Rutas Exclusivas para Admin */}
-              <Route element={<ProtectedRoute roles={['admin']} />}>
+              {/* Rutas Exclusivas para Administrador */}
+              <Route element={<ProtectedRoute roles={['admin', 'administrador']} />}>
                 <Route path="/admin/aulas" element={<GestionAulas />} />
                 <Route path="/admin/stock" element={<StockMateriales />} />
                 <Route path="/admin/usuarios" element={<ControlUsuarios />} />
@@ -50,8 +49,8 @@ function App() {
             </Route>
           </Route>
 
-          {/* Captura de Rutas Desconocidas / 404 */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          {/* Captura de Rutas Desconocidas (404) -> Redirige a raíz para procesar auth */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

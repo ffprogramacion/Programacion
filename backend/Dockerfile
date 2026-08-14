@@ -17,4 +17,4 @@ EXPOSE 8000
 # Arranque de producción con Gunicorn.
 # IMPORTANTE: reemplacen 'config' por el nombre de la carpeta que
 # contiene su archivo wsgi.py (la que tiene settings.py).
-CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"]

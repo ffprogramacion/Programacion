@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext'; // Importamos el cerebro global
+import { useAuth } from '../context/AuthContext'; 
 import { IconButton, Badge, Menu, MenuItem, Typography, Box, Divider, Button } from '@mui/material';
 import { Notifications as NotificationsIcon, DeleteSweep as ClearIcon } from '@mui/icons-material';
 
 export default function NotificationBell() {
-  const { notificaciones, limpiarNotificaciones } = useAuth(); // Consumimos datos globales
+  const { notificaciones, limpiarNotificaciones } = useAuth(); 
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleOpen = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
   const handleClearAll = () => {
+    // Esto llamará a la API desde el AuthContext para marcarlas como leídas o borrarlas
     limpiarNotificaciones();
     handleClose();
   };
@@ -18,8 +19,7 @@ export default function NotificationBell() {
   return (
     <Box>
       <IconButton color="inherit" onClick={handleOpen}>
-        {/* Muestra la cantidad exacta de alertas vivas en tiempo real */}
-        <Badge badgeContent={notificaciones.length} color="error">
+        <Badge badgeContent={notificaciones?.length || 0} color="error">
           <NotificationsIcon />
         </Badge>
       </IconButton>
@@ -39,11 +39,11 @@ export default function NotificationBell() {
         }}
       >
         {/* Encabezado del menú desplegable */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, py: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, py: 1.5 }}>
           <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
             Alertas del Sistema
           </Typography>
-          {notificaciones.length > 0 && (
+          {notificaciones?.length > 0 && (
             <Button 
               size="small" 
               startIcon={<ClearIcon />} 
@@ -56,31 +56,49 @@ export default function NotificationBell() {
         </Box>
         <Divider />
 
-        {notificaciones.length === 0 ? (
-          <MenuItem onClick={handleClose} disabled sx={{ py: 2, justifyContent: 'center' }}>
+        {!notificaciones || notificaciones.length === 0 ? (
+          <MenuItem onClick={handleClose} disabled sx={{ py: 3, justifyContent: 'center' }}>
             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              No tienes notificaciones nuevas
+              No hay notificaciones nuevas
             </Typography>
           </MenuItem>
         ) : (
-          notificaciones.map((notif) => (
-            <Box key={notif.id}>
-              <MenuItem 
-                onClick={handleClose} 
-                sx={{ 
-                  whiteSpace: 'normal', 
-                  py: 1.5,
-                  fontSize: '0.85rem',
-                  '&:hover': { backgroundColor: '#f8fafc' } 
-                }}
-              >
-                <Typography variant="body2" sx={{ color: '#334155', lineHeight: 1.4 }}>
-                  {notif.text}
-                </Typography>
-              </MenuItem>
-              <Divider sx={{ opacity: 0.6 }} />
-            </Box>
-          ))
+          notificaciones.map((notif) => {
+            // Normalización de datos para soportar tanto mocks como la respuesta de Django
+            const mensaje = notif.mensaje || notif.text || 'Nueva alerta de sistema';
+            const fechaString = notif.fecha_creacion || notif.fecha;
+            
+            return (
+              <Box key={notif.id}>
+                <MenuItem 
+                  onClick={handleClose} 
+                  sx={{ 
+                    whiteSpace: 'normal', 
+                    py: 1.5,
+                    px: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    '&:hover': { backgroundColor: '#f8fafc' } 
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: '#334155', lineHeight: 1.4, mb: fechaString ? 0.5 : 0 }}>
+                    {mensaje}
+                  </Typography>
+                  
+                  {/* Renderizado condicional de la fecha si la API la provee */}
+                  {fechaString && (
+                    <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+                      {new Date(fechaString).toLocaleDateString('es-AR', {
+                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </Typography>
+                  )}
+                </MenuItem>
+                <Divider sx={{ opacity: 0.6 }} />
+              </Box>
+            );
+          })
         )}
       </Menu>
     </Box>

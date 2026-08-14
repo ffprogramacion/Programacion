@@ -10,23 +10,28 @@ import logoUnraf from '../assets/logo-unraf.png';
 export default function Navbar({ onDrawerToggle, title }) {
   const { user, setUser } = useAuth();
 
+  // 🚀 Función de Testing: Solo útil si el backend permite sobrescribir roles o para UI mock.
   const toggleRoleTesting = () => {
     if (!user) return;
     
-    const roles = ['student', 'teacher', 'admin'];
-    const nextRole = roles[(roles.indexOf(user.role) + 1) % roles.length];
+    // Normalizamos a los roles en español que probablemente uses en Django
+    const roles = ['estudiante', 'profesor', 'admin'];
+    const currentRole = user.role || user.rol; // Soporta ambos nombres de propiedad
+    const nextRole = roles[(roles.indexOf(currentRole) + 1) % roles.length];
     
     const usuarioActualizado = { 
       ...user, 
-      name: user?.name || "Facundo Boide", 
+      rol: nextRole,
       role: nextRole 
     };
 
     setUser(usuarioActualizado);
-    localStorage.setItem('universidad_user', JSON.stringify(usuarioActualizado));
+    // Nota: Esto solo cambia la UI. El token JWT seguirá teniendo el rol real.
   };
 
-  const userInitial = user?.name ? user.name.trim()[0].toUpperCase() : 'U';
+  // Extraemos el nombre dinámicamente según lo que envíe Django
+  const userName = user?.nombre || user?.first_name || user?.name || 'Usuario';
+  const userInitial = userName.trim()[0].toUpperCase();
 
   return (
     <AppBar 
@@ -42,7 +47,7 @@ export default function Navbar({ onDrawerToggle, title }) {
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Botón de Hamburguesa para pantallas chicas */}
+          
           <IconButton 
             color="inherit" 
             edge="start" 
@@ -52,7 +57,6 @@ export default function Navbar({ onDrawerToggle, title }) {
             <MenuIcon />
           </IconButton>
 
-          {/* 🌟 CONTENEDOR DEL LOGO INSTITUCIONAL */}
           <Box 
             component="img"
             src={logoUnraf}
@@ -60,15 +64,14 @@ export default function Navbar({ onDrawerToggle, title }) {
             sx={{ 
               height: 32, 
               width: 'auto',
-              borderRadius: '4px', // Le da una terminación suave en las esquinas si tiene fondo blanco
-              backgroundColor: '#ffffff', // Opcional: asegura contraste si el logo es oscuro
+              borderRadius: '4px',
+              backgroundColor: '#ffffff', 
               p: 0.3,
               boxShadow: '0px 2px 6px rgba(0,0,0,0.08)',
-              display: { xs: 'none', sx: 'block', sm: 'block' } // Se oculta en pantallas ultra chicas para no encimar
+              display: { xs: 'none', sx: 'block', sm: 'block' } 
             }}
           />
           
-          {/* Título dinámico del módulo institucional */}
           <Typography 
             variant="h6" 
             noWrap 
@@ -85,15 +88,16 @@ export default function Navbar({ onDrawerToggle, title }) {
           </Typography>
         </Box>
 
-        {/* Bloque Derecho: Herramientas de Desarrollo y Datos de Perfil */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
           
-          {user && (
+          {/* 🔥 MAGIA VITE: import.meta.env.DEV oculta este botón en producción automáticamente */}
+          {import.meta.env.DEV && user && (
             <Button 
               variant="outlined" 
               size="small" 
               startIcon={<CodeIcon sx={{ fontSize: '14px !important' }} />}
               onClick={toggleRoleTesting} 
+              title="Cuidado: Esto no cambia el token JWT del backend"
               sx={{ 
                 backgroundColor: 'rgba(251, 192, 45, 0.1)', 
                 color: '#fbc02d', 
@@ -113,14 +117,12 @@ export default function Navbar({ onDrawerToggle, title }) {
                 }
               }}
             >
-              Dev: {user.role}
+              Dev: {user.rol || user.role}
             </Button>
           )}
 
-          {/* Campanita de Notificaciones */}
           <NotificationBell />
 
-          {/* Avatar del usuario con anillo institucional */}
           {user && (
             <Avatar 
               sx={{ 
@@ -135,6 +137,7 @@ export default function Navbar({ onDrawerToggle, title }) {
                 transition: 'transform 0.2s',
                 '&:hover': { transform: 'scale(1.05)' }
               }}
+              title={userName} // Muestra el nombre al posar el mouse
             >
               {userInitial}
             </Avatar>

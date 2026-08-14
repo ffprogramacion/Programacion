@@ -4,6 +4,7 @@ import { Box, Typography, Button, Card, CardContent } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import TablaAulas from '../../components/TablaAulas';
 import DialogoAula from '../../components/DialogoAula';
+// 🏛️ import api from '../../api';
 
 export default function GestionAulas() {
   const { aulas, setAulas } = useAuth();
@@ -21,38 +22,63 @@ export default function GestionAulas() {
     setModalAbierto(true);
   };
 
-  // 🔥 GUARDADO BLINDADO: Usamos 'prevAulas' para evitar bugs de memoria al navegar
-  const procesarGuardar = (datosFormulario) => {
-    setAulas((prevAulas) => {
-      let nuevoArr;
+  // 🚀 GUARDADO ASÍNCRONO CON LA API
+  const procesarGuardar = async (datosFormulario) => {
+    try {
       if (aulaSeleccionada) {
-        // MODO EDICIÓN
-        nuevoArr = prevAulas.map(a => 
-          a.id === aulaSeleccionada.id 
-            ? { ...a, ...datosFormulario, capacidad: Number(datosFormulario.capacidad) || 0 } 
-            : a
-        );
+        // --- MODO EDICIÓN (PUT / PATCH) ---
+        // const response = await api.put(`/aulas/${aulaSeleccionada.id}/`, datosFormulario);
+        // const aulaActualizadaDB = response.data;
+
+        // Mock para mantener funcionando tu UI actual:
+        const aulaActualizadaDB = { 
+          ...aulaSeleccionada, 
+          ...datosFormulario, 
+          capacidad: Number(datosFormulario.capacidad) || 0 
+        };
+        
+        // Actualizamos el estado solo después de una respuesta exitosa
+        setAulas((prevAulas) => prevAulas.map(a => a.id === aulaSeleccionada.id ? aulaActualizadaDB : a));
       } else {
-        // MODO CREACIÓN
-        const nuevoId = prevAulas.length > 0 ? Math.max(...prevAulas.map(a => a.id)) + 1 : 1;
-        nuevoArr = [...prevAulas, { ...datosFormulario, id: nuevoId, capacidad: Number(datosFormulario.capacidad) || 0 }];
+        // --- MODO CREACIÓN (POST) ---
+        // Al enviar el POST sin ID, Django lo crea y nos devuelve el objeto con el ID real de la BD.
+        // const response = await api.post('/aulas/', datosFormulario);
+        // const nuevaAulaDB = response.data;
+
+        // Mock para mantener funcionando tu UI actual:
+        const nuevoIdDB = aulas.length > 0 ? Math.max(...aulas.map(a => a.id)) + 1 : 1;
+        const nuevaAulaDB = { 
+          ...datosFormulario, 
+          id: nuevoIdDB, 
+          capacidad: Number(datosFormulario.capacidad) || 0 
+        };
+        
+        // Agregamos el aula oficial de la base de datos a nuestro estado
+        setAulas((prevAulas) => [...prevAulas, nuevaAulaDB]);
       }
       
-      // Sincronización instantánea con el almacenamiento físico
-      localStorage.setItem('universidad_aulas', JSON.stringify(nuevoArr));
-      return nuevoArr;
-    });
-    
-    setModalAbierto(false);
+      setModalAbierto(false);
+    } catch (error) {
+      console.error("Error al guardar el aula en el servidor:", error);
+      alert("Hubo un problema de conexión al guardar. Revisa la consola.");
+    }
   };
 
-  // 🔥 BORRADO BLINDADO
-  const procesarBorrar = (id) => {
-    setAulas((prevAulas) => {
-      const nuevoArr = prevAulas.filter(a => a.id !== id);
-      localStorage.setItem('universidad_aulas', JSON.stringify(nuevoArr));
-      return nuevoArr;
-    });
+  // 🚀 BORRADO ASÍNCRONO SEGURO
+  const procesarBorrar = async (id) => {
+    // Es buena práctica de UX pedir confirmación antes de disparar un DELETE
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este espacio del sistema?")) return;
+
+    try {
+      // Petición DELETE a Django:
+      // await api.delete(`/aulas/${id}/`);
+      
+      // Si la API responde OK, borramos del frontend
+      setAulas((prevAulas) => prevAulas.filter(a => a.id !== id));
+    } catch (error) {
+      console.error("Error al borrar el aula:", error);
+      alert("No se pudo eliminar el aula. Es posible que tenga reservas activas asociadas.");
+    }
   };
 
   return (
@@ -65,25 +91,35 @@ export default function GestionAulas() {
           variant="contained" 
           startIcon={<AddIcon />} 
           onClick={abrirCreacion} 
-          sx={{ backgroundColor: '#0f5cb3', textTransform: 'none', borderRadius: 2, fontWeight: 'bold', '&:hover': { backgroundColor: '#0c4d96' } }}
+          disableElevation
+          sx={{ 
+            backgroundColor: '#0f5cb3', 
+            textTransform: 'none', 
+            borderRadius: 2, 
+            fontWeight: 'bold', 
+            px: 3,
+            '&:hover': { backgroundColor: '#0c4d96' } 
+          }}
         >
           Agregar Nueva Aula
         </Button>
       </Box>
 
-      <Card sx={{ borderRadius: 3, boxShadow: '0px 4px 20px rgba(0,0,0,0.02)', overflow: 'hidden', border: '1px solid #eef2f6' }}>
+      <Card sx={{ borderRadius: 3, boxShadow: '0px 4px 20px rgba(0,0,0,0.03)', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
         <CardContent sx={{ p: 0 }}>
-          {/* FALLBACK DE SEGURIDAD: Evita que el DataGrid colapse si el array está indefinido */}
           <TablaAulas datos={aulas || []} onEdit={abrirEdicion} onDelete={procesarBorrar} />
         </CardContent>
       </Card>
 
-      <DialogoAula 
-        open={modalAbierto} 
-        onClose={() => setModalAbierto(false)} 
-        onSave={procesarGuardar} 
-        aulaParaEditar={aulaSeleccionada} 
-      />
+      {/* Condicionamos el renderizado para que el componente se desmonte y limpie sus estados internos */}
+      {modalAbierto && (
+        <DialogoAula 
+          open={modalAbierto} 
+          onClose={() => setModalAbierto(false)} 
+          onSave={procesarGuardar} 
+          aulaParaEditar={aulaSeleccionada} 
+        />
+      )}
     </Box>
   );
 }

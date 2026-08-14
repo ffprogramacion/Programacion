@@ -23,16 +23,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_$j3zwy9dxwcga-9#3#ymo$i9b6(msif1v6m9=zwx)^^nh%&b$'
+# Carga desde variable de entorno o usa una por defecto si estás en local
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_$j3zwy9dxwcga-9#3#ymo$i9b6(msif1v6m9=zwx)^^nh%&b$')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Lee la variable de entorno DEBUG (convertida a booleano)
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = os.environ.get(
- "DJANGO_ALLOWED_HOSTS",
- "api.app9.academia.ar,localhost,127.0.0.1"
-).split(",")
+    "DJANGO_ALLOWED_HOSTS",
+    "api.app9.academia.ar,localhost,127.0.0.1"
+).replace(" ", "").split(",")
 
 # Application definition
 
@@ -43,8 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'corsheaders',
+    'rest_framework',
     'reservas',
     'academia',
 ]
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -63,13 +64,22 @@ MIDDLEWARE = [
 # Permitir llamadas desde React
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://127.0.0.1",
+    "http://localhost:80",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://localhost",
     "https://app9.academia.ar",
+    "http://app9.academia.ar",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
- "https://app9.academia.ar",
- "https://api.app9.academia.ar",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://app9.academia.ar",
+    "https://api.app9.academia.ar",
 ]
 
 REST_FRAMEWORK = {
@@ -111,7 +121,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
+        default=os.environ.get("DATABASE_URL", "sqlite:///" + str(BASE_DIR / "db.sqlite3")),
         conn_max_age=600,
     )
 }
@@ -158,3 +168,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}

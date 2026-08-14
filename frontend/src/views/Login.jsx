@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
-import api from '../service/api.js'; // Usamos la instancia con interceptores
+import api from '../service/api.js'; 
 import { 
   Box, Card, CardContent, TextField, Button, Typography, 
   MenuItem, Container, CssBaseline, InputAdornment, IconButton, Link, Alert
@@ -37,36 +37,19 @@ export default function Login() {
     try {
       if (!isRegister) {
         // ----------------------------------------------------
-        // 1. PETICIÓN DE LOGIN (Obtener Token JWT)
+        // 1. INICIO DE SESIÓN (Delegado al AuthContext)
         // ----------------------------------------------------
-        const tokenRes = await api.post('/token/', {
-          username: username,
-          password: password
-        });
-
-        const { access, refresh } = tokenRes.data;
-        // Guardamos los tokens en localStorage
-        localStorage.setItem('accessToken', access);
-        localStorage.setItem('refreshToken', refresh);
-
-        // ----------------------------------------------------
-        // 2. OBTENER PERFIL DEL USUARIO (/api/me/)
-        // (El interceptor adjunta el header Bearer automáticamente)
-        // ----------------------------------------------------
-        const userRes = await api.get('/me/');
-
-        // Guardamos usuario en el Contexto Global
-        login(userRes.data, access);
+        await login(username, password);
         navigate('/clases', { replace: true });
 
       } else {
         // ----------------------------------------------------
-        // 3. PETICIÓN DE REGISTRO (/api/register/)
+        // 2. REGISTRO DE USUARIO
         // ----------------------------------------------------
         const [firstName, ...lastNameArray] = fullName.trim().split(' ');
         const lastName = lastNameArray.join(' ');
 
-        await api.post('/register/', {
+        await api.post('register/', {
           username: username,
           email: email,
           password: password,
@@ -77,18 +60,21 @@ export default function Login() {
           }
         });
 
-        // Al registrar exitosamente, cambiamos a modo Login
+        // Cambiamos a modo Login tras registro exitoso
         setIsRegister(false);
         setError('¡Cuenta creada con éxito! Por favor iniciá sesión.');
       }
     } catch (err) {
       console.error(err);
       if (err.response && err.response.data) {
-        // Muestra el error formateado devuelto por Django REST Framework
-        const msg = typeof err.response.data === 'object' 
-          ? JSON.stringify(err.response.data) 
-          : err.response.data;
+        // Formateo de respuesta de error devuelta por Django REST Framework
+        const data = err.response.data;
+        const msg = typeof data === 'object' 
+          ? Object.entries(data).map(([key, val]) => `${key}: ${val}`).join(' | ') 
+          : data;
         setError(`Error: ${msg}`);
+      } else if (err.message) {
+        setError(err.message);
       } else {
         setError('Error de conexión con el servidor.');
       }

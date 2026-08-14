@@ -19,24 +19,37 @@ export default function AgendaDisponibilidad({ aulaSeleccionada }) {
     let hoy = new Date();
     
     for (let i = 0; i < 14; i++) {
-      hoy.setDate(hoy.getDate() + 1);
+      // Sumamos días (el i=0 ya es mañana si sumamos antes, ajustado a hoy)
       const labelVisual = hoy.toLocaleDateString('es-AR', opciones);
       
       const diaStr = String(hoy.getDate()).padStart(2, '0');
       const mesStr = String(hoy.getMonth() + 1).padStart(2, '0');
       const anioStr = hoy.getFullYear();
-      const fechaId = `${diaStr}/${mesStr}/${anioStr}`;
-
-      dias.push({ label: labelVisual, fechaId: fechaId });
+      
+      // Mantenemos tu formato de UI, pero agregamos una clave ISO para la API
+      dias.push({ 
+        label: labelVisual, 
+        fechaId: `${diaStr}/${mesStr}/${anioStr}`, // Formato visual / mock actual
+        isoDate: `${anioStr}-${mesStr}-${diaStr}`   // Formato esperado de Django
+      });
+      
+      hoy.setDate(hoy.getDate() + 1);
     }
     setProximosDias(dias);
     if (dias.length > 0) setDiaSeleccionado(dias[0]);
   }, []);
 
+  // 🔄 FILTRO ADAPTADO (Soporta tu mock actual y preparativos para API)
   const reservasDelDia = reservas.filter(res => {
-    return res.aula === aulaSeleccionada && 
-           res.estado === 'Activa' && 
-           res.fecha.startsWith(diaSeleccionado?.fechaId);
+    if (res.aula !== aulaSeleccionada || res.estado !== 'Activa') return false;
+    
+    // Si tu API devuelve un campo de fecha específico (ej. res.dia_reserva === "2026-06-12")
+    if (res.dia_reserva) {
+      return res.dia_reserva === diaSeleccionado?.isoDate;
+    }
+    
+    // Fallback a tu lógica de mock actual
+    return res.fecha && res.fecha.startsWith(diaSeleccionado?.fechaId);
   });
 
   const scrollSiguiente = () => {
@@ -58,7 +71,7 @@ export default function AgendaDisponibilidad({ aulaSeleccionada }) {
         boxShadow: '0px 8px 30px rgba(0,0,0,0.03)', 
         border: '1px solid #eef2f6',
         background: '#ffffff',
-        width: '100%' // 👈 Bloque plano estricto para no empujar la grilla padre
+        width: '100%' 
       }}
     >
       <CardContent sx={{ p: 3 }}>
@@ -92,13 +105,13 @@ export default function AgendaDisponibilidad({ aulaSeleccionada }) {
             <LeftIcon fontSize="small" />
           </IconButton>
 
-          {/* Caja elástica contenedora con ancho lógico rígido */}
+          {/* Caja elástica contenedora - minWidth: 0 evita desbordes en Flexbox */}
           <Box 
             sx={{ 
               flexGrow: 1, 
               overflow: 'hidden', 
               position: 'relative',
-              width: '100px' // Forzamos una base mínima inicial para que el flexbox no desborde
+              minWidth: 0 
             }}
           >
             <Box 
@@ -117,7 +130,12 @@ export default function AgendaDisponibilidad({ aulaSeleccionada }) {
               }}
             >
               {proximosDias.map((dia) => {
-                const numReservas = reservas.filter(r => r.aula === aulaSeleccionada && r.estado === 'Activa' && r.fecha.startsWith(dia.fechaId)).length;
+                // Cálculo de reservas por día
+                const numReservas = reservas.filter(r => {
+                  if (r.aula !== aulaSeleccionada || r.estado !== 'Activa') return false;
+                  return r.dia_reserva ? r.dia_reserva === dia.isoDate : (r.fecha && r.fecha.startsWith(dia.fechaId));
+                }).length;
+                
                 const isCurrent = diaSeleccionado?.fechaId === dia.fechaId;
 
                 return (
@@ -197,16 +215,21 @@ export default function AgendaDisponibilidad({ aulaSeleccionada }) {
             </Fade>
           ) : (
             <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {reservasDelDia.map((res) => (
-                <Fade in={true} key={res.id}>
-                  <ListItem disablePadding sx={{ p: 1.5, bgcolor: '#ffffff', borderRadius: 2.5, borderLeft: '4px solid #fbc02d', boxShadow: '0px 2px 6px rgba(0,0,0,0.01)', borderTop: '1px solid #f1f5f9', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
-                    <ListItemText
-                      primary={<Typography variant="body2" fontWeight="700" color="#1e293b">🕒 {res.fecha.split(' - ')[1]} hs — Ocupado</Typography>}
-                      secondary={<Typography variant="caption" color="#64748b" sx={{ display: 'block', mt: 0.3 }}>Docente: {res.solicitante} • Equipos: {res.materiales}</Typography>}
-                    />
-                  </ListItem>
-                </Fade>
-              ))}
+              {reservasDelDia.map((res) => {
+                // Extracción segura de la hora (soporta tu mock y formato API básico)
+                const horaMostrar = res.hora_inicio ? res.hora_inicio.substring(0, 5) : (res.fecha.includes(' - ') ? res.fecha.split(' - ')[1].replace('de ', '') : 'Turno');
+                
+                return (
+                  <Fade in={true} key={res.id}>
+                    <ListItem disablePadding sx={{ p: 1.5, bgcolor: '#ffffff', borderRadius: 2.5, borderLeft: '4px solid #fbc02d', boxShadow: '0px 2px 6px rgba(0,0,0,0.01)', borderTop: '1px solid #f1f5f9', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+                      <ListItemText
+                        primary={<Typography variant="body2" fontWeight="700" color="#1e293b">🕒 {horaMostrar} — Ocupado</Typography>}
+                        secondary={<Typography variant="caption" color="#64748b" sx={{ display: 'block', mt: 0.3 }}>Docente: {res.solicitante} • Equipos: {res.materiales}</Typography>}
+                      />
+                    </ListItem>
+                  </Fade>
+                );
+              })}
             </List>
           )}
         </Box>

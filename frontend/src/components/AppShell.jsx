@@ -3,16 +3,20 @@ import { Box, CssBaseline, Toolbar } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
-import { useAuth } from '../context/AuthContext'; // 👈 Importamos el contexto para conocer el rol
+import { useAuth } from '../context/AuthContext'; 
 
 export const DRAWER_WIDTH = 260;
 
 export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth(); // 👈 Consumimos el usuario activo
+  const { user } = useAuth(); 
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+
+  // Normalizamos el rol para soportar variaciones de la base de datos (inglés/español)
+  const userRole = user?.role || user?.rol;
+  const isAdmin = userRole === 'admin' || userRole === 'administrador';
 
   // Mapeo dinámico de títulos basado en la identidad académica y el rol
   const getTitle = () => {
@@ -21,7 +25,7 @@ export default function AppShell() {
       case '/reservar': return 'Solicitud de Espacios Académicos';
       case '/reservas': 
         // 🔥 Título adaptativo según rol para la misma URL
-        return user?.role === 'admin' ? 'Historial de Reservas Activas (Global)' : 'Espacios Físicos e Infraestructura';
+        return isAdmin ? 'Historial de Reservas Activas (Global)' : 'Espacios Físicos e Infraestructura';
       case '/perfil': return 'Perfil Digital Institucional';
       case '/admin/aulas': return 'Módulo de Gestión de Aulas (CRUD)';
       case '/admin/stock': return 'Inventario de Recursos y Materiales';
@@ -31,7 +35,7 @@ export default function AppShell() {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       <CssBaseline />
       
       <Navbar 

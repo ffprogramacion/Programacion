@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid } from '@mui/material';
 
 export default function DialogoAula({ open, onClose, onSave, aulaParaEditar }) {
-  // Estado local e independiente para los campos del formulario, ahora incluye imagen y descripcion
   const [formData, setFormData] = useState({ 
     nombre: '', 
     ubicacion: '', 
@@ -12,34 +11,52 @@ export default function DialogoAula({ open, onClose, onSave, aulaParaEditar }) {
     descripcion: ''
   });
 
-  // Cada vez que cambia el aula elegida (o se limpia), actualizamos los campos
   useEffect(() => {
-    if (aulaParaEditar) {
+    if (aulaParaEditar && open) {
+      // Si hay un aula para editar, cargamos sus datos exactos (incluyendo el ID oculto)
       setFormData({
         ...aulaParaEditar,
         imagen: aulaParaEditar.imagen || '',
-        descripcion: aulaParaEditar.descripcion || ''
+        descripcion: aulaParaEditar.descripcion || '',
+        capacidad: aulaParaEditar.capacidad || ''
       });
-    } else {
-      setFormData({ nombre: '', ubicacion: '', capacidad: '', tipo: '', imagen: '', descripcion: '' });
+    } else if (!open) {
+      // Cuando se cierra el modal, reseteamos a blanco para evitar "fantasmas" 
+      // si el usuario abre inmediatamente el modal de "Registrar Nueva Aula"
+      setFormData({ 
+        nombre: '', 
+        ubicacion: '', 
+        capacidad: '', 
+        tipo: '', 
+        imagen: '', 
+        descripcion: '' 
+      });
     }
   }, [aulaParaEditar, open]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Normalizamos los datos antes de enviarlos a la API (Django)
+    const payload = {
+      ...formData,
+      // Aseguramos que la capacidad sea un entero válido para la base de datos
+      capacidad: formData.capacidad ? parseInt(formData.capacidad, 10) : 0,
+    };
+
+    onSave(payload);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"> {/* Cambiado a 'md' para más espacio */}
-      <DialogTitle fontWeight="bold">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle fontWeight="bold" sx={{ color: '#1a1a1a' }}>
         {aulaParaEditar ? '✏️ Modificar Espacio Físico' : '🏛️ Registrar Nueva Aula'}
       </DialogTitle>
       
       <form onSubmit={handleSubmit}>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ backgroundColor: '#fdfdfd' }}>
           <Grid container spacing={3}>
-            {/* Campos principales */}
+            
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -49,33 +66,39 @@ export default function DialogoAula({ open, onClose, onSave, aulaParaEditar }) {
                 onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               />
             </Grid>
+            
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                required
                 label="Ubicación Física (Edificio, Planta...)"
                 value={formData.ubicacion}
                 onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
               />
             </Grid>
+            
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                required
                 label="Capacidad Máxima de Alumnos"
                 type="number"
+                inputProps={{ min: 1 }} // Validación nativa para evitar valores negativos
                 value={formData.capacidad}
                 onChange={(e) => setFormData({ ...formData, capacidad: e.target.value })}
               />
             </Grid>
+            
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                required
                 label="Tipo de Espacio (Auditorio, Lab...)"
                 value={formData.tipo}
                 onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
               />
             </Grid>
 
-            {/* 🔥 NUEVOS CAMPOS: Imagen y Descripción */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -86,6 +109,7 @@ export default function DialogoAula({ open, onClose, onSave, aulaParaEditar }) {
                 helperText="Pegá el enlace directo de una imagen de internet. Si dejás esto vacío, se usará una foto genérica."
               />
             </Grid>
+            
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -97,12 +121,29 @@ export default function DialogoAula({ open, onClose, onSave, aulaParaEditar }) {
                 onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
               />
             </Grid>
+
           </Grid>
         </DialogContent>
         
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={onClose} color="inherit" sx={{ textTransform: 'none', fontWeight: 'bold' }}>Cancelar</Button>
-          <Button type="submit" variant="contained" sx={{ backgroundColor: '#0f5cb3', textTransform: 'none', fontWeight: 'bold' }}>
+        <DialogActions sx={{ p: 2.5, backgroundColor: '#fdfdfd' }}>
+          <Button 
+            onClick={onClose} 
+            color="inherit" 
+            sx={{ textTransform: 'none', fontWeight: 'bold' }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            disableElevation // Estilo más plano y moderno
+            sx={{ 
+              backgroundColor: '#0f5cb3', 
+              textTransform: 'none', 
+              fontWeight: 'bold',
+              '&:hover': { backgroundColor: '#0c4a91' } // Efecto hover institucional
+            }}
+          >
             {aulaParaEditar ? 'Actualizar Cambios' : 'Guardar Espacio'}
           </Button>
         </DialogActions>

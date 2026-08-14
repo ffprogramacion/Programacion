@@ -44,7 +44,9 @@ class ReservaViewSet(viewsets.ModelViewSet):
             return Reserva.objects.all()
             
         return Reserva.objects.filter(solicitante=user)
-
+    
+    def perform_create(self, serializer):
+        serializer.save(solicitante=self.request.user)
 
 # Vista dedicada EXCLUSIVAMENTE a crear usuarios nuevos (Pública)
 class RegistroView(generics.CreateAPIView):

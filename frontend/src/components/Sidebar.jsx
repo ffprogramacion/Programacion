@@ -19,25 +19,52 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  // Matriz de enrutamiento del menú con asignación de roles jerárquicos
+  // 🚀 Normalización robusta para API de Django
+  const userRole = (user?.rol || user?.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin' || userRole === 'administrador';
+  const isTeacher = userRole === 'teacher' || userRole === 'profesor' || userRole === 'docente';
+  
+  // Normalizamos el nombre (soporta fields genéricos de Django Auth)
+  const userName = user?.nombre || user?.first_name || user?.name || 'USUARIO UNRAF';
+  const userInitial = userName.trim()[0].toUpperCase();
+
+  // Etiqueta visual para la credencial
+  let roleLabel = 'Estudiante';
+  if (isAdmin) roleLabel = 'Administrador';
+  else if (isTeacher) roleLabel = 'Docente';
+
+  // Matriz de enrutamiento ampliada para soportar nomenclaturas EN/ES
   const menuItems = [
-    { text: 'Mis Clases', path: '/clases', icon: <ClassIcon />, roles: ['student', 'teacher'] },
-    { text: 'Reservar Aulas', path: '/reservar', icon: <CalendarIcon />, roles: ['student', 'teacher'] },
-    
-    // 🔥 CAMBIO AQUÍ: El texto cambia dinámicamente según la credencial activa del usuario
     { 
-      text: user?.role === 'admin' ? 'Reservas Históricas' : 'Aulas Disponibles', 
+      text: 'Mis Clases', 
+      path: '/clases', 
+      icon: <ClassIcon />, 
+      roles: ['student', 'estudiante', 'teacher', 'profesor', 'docente'] 
+    },
+    { 
+      text: 'Reservar Aulas', 
+      path: '/reservar', 
+      icon: <CalendarIcon />, 
+      roles: ['student', 'estudiante', 'teacher', 'profesor', 'docente'] 
+    },
+    { 
+      text: isAdmin ? 'Reservas Históricas' : 'Aulas Disponibles', 
       path: '/reservas', 
       icon: <AulaIcon />, 
-      roles: ['student', 'teacher', 'admin'] 
+      // Esta ruta la ven todos
+      roles: ['student', 'estudiante', 'teacher', 'profesor', 'docente', 'admin', 'administrador'] 
+    },
+    { 
+      text: 'Mi Perfil', 
+      path: '/perfil', 
+      icon: <PersonIcon />, 
+      roles: ['student', 'estudiante', 'teacher', 'profesor', 'docente', 'admin', 'administrador'] 
     },
     
-    { text: 'Mi Perfil', path: '/perfil', icon: <PersonIcon />, roles: ['student', 'teacher', 'admin'] },
-    
     // Rutas Exclusivas del Panel de Control de Administración
-    { text: 'Gestión de Aulas', path: '/admin/aulas', icon: <AdminIcon />, roles: ['admin'] },
-    { text: 'Stock de Materiales', path: '/admin/stock', icon: <StockIcon />, roles: ['admin'] },
-    { text: 'Control de Usuarios', path: '/admin/usuarios', icon: <UsersIcon />, roles: ['admin'] },
+    { text: 'Gestión de Aulas', path: '/admin/aulas', icon: <AdminIcon />, roles: ['admin', 'administrador'] },
+    { text: 'Stock de Materiales', path: '/admin/stock', icon: <StockIcon />, roles: ['admin', 'administrador'] },
+    { text: 'Control de Usuarios', path: '/admin/usuarios', icon: <UsersIcon />, roles: ['admin', 'administrador'] },
   ];
 
   const drawerContent = (
@@ -66,11 +93,11 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
                 boxShadow: '0px 4px 10px rgba(15,92,179,0.2)'
               }}
             >
-              {user?.name ? user.name[0].toUpperCase() : 'U'}
+              {userInitial}
             </Avatar>
 
             {/* Datos Tipográficos */}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <Typography 
                 variant="caption" 
                 sx={{ 
@@ -85,8 +112,8 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
                 Credencial Activa
               </Typography>
               
-              <Typography variant="body1" fontWeight="bold" sx={{ color: '#1e293b', lineHeight: 1.1 }}>
-                {user?.name ? user.name : 'USUARIO UNRAF'}
+              <Typography variant="body1" fontWeight="bold" noWrap sx={{ color: '#1e293b', lineHeight: 1.1 }}>
+                {userName}
               </Typography>
               
               <Typography 
@@ -101,7 +128,7 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
                 }}
               >
                 <VerifiedIcon sx={{ fontSize: '0.9rem', color: '#10b981' }} />
-                {user.role === 'admin' ? 'Administrador' : user.role === 'teacher' ? 'Docente' : 'Estudiante'}
+                {roleLabel}
               </Typography>
             </Box>
           </Box>
@@ -111,7 +138,8 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
       
       <List sx={{ px: 2, mt: 1, flexGrow: 1 }}>
         {menuItems
-          .filter((item) => item.roles.includes(user?.role))
+          // Filtramos usando el userRole normalizado
+          .filter((item) => item.roles.includes(userRole))
           .map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -171,12 +199,11 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
 
   return (
     <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
-      {/* Drawer para Dispositivos Móviles */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
         onClose={onDrawerToggle}
-        ModalProps={{ keepMounted: true }} // Mejora el rendimiento de renderizado en móviles.
+        ModalProps={{ keepMounted: true }} 
         sx={{ 
           display: { xs: 'block', sm: 'none' }, 
           '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: '1px solid #e0e0e0' } 
@@ -186,7 +213,6 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
         {drawerContent}
       </Drawer>
       
-      {/* Drawer Permanente para Escritorio */}
       <Drawer
         variant="permanent"
         sx={{ 

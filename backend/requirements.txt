@@ -1,6 +1,5 @@
 asgiref==3.11.1
 Django==5.2.13
-django-cors-headers==4.9.0
 djangorestframework==3.17.1
 sqlparse==0.5.5
 tzdata==2026.1
@@ -8,3 +7,5 @@ gunicorn
 psycopg2-binary
 dj-database-url
 djangorestframework-simplejwt
+whitenoise
+django-cors-headers
