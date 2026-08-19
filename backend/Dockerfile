@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-# Evita archivos .pyc y muestra los logs directo en consola
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
