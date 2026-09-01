@@ -60,14 +60,10 @@ MIDDLEWARE = [
 
 # Permitir llamadas desde React
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
     "https://app9.academia.ar",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
     "https://app9.academia.ar",
     "https://api.app9.academia.ar",
 ]
@@ -101,11 +97,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+DATABASES = { 
+"default": dj_database_url.config( 
+default=os.environ.get("DATABASE_URL"), 
+conn_max_age=600, 
+) 
 }
 
 
