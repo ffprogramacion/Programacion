@@ -20,13 +20,14 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
   const location = useLocation();
 
   // 🚀 Normalización robusta para API de Django
-  const userRole = (user?.rol || user?.role || '').toLowerCase();
+  const userRole = (user?.rol || user?.role || user?.profile?.rol || '').toLowerCase().trim();
   const isAdmin = userRole === 'admin' || userRole === 'administrador';
   const isTeacher = userRole === 'teacher' || userRole === 'profesor' || userRole === 'docente';
+  const effectiveRole = userRole || 'student';
   
   // Normalizamos el nombre (soporta fields genéricos de Django Auth)
   const userName = user?.nombre || user?.first_name || user?.name || 'USUARIO UNRAF';
-  const userInitial = userName.trim()[0].toUpperCase();
+  const userInitial = userName.trim() ? userName.trim()[0].toUpperCase() : 'U';
 
   // Etiqueta visual para la credencial
   let roleLabel = 'Estudiante';
@@ -139,7 +140,7 @@ export default function Sidebar({ drawerWidth, mobileOpen, onDrawerToggle }) {
       <List sx={{ px: 2, mt: 1, flexGrow: 1 }}>
         {menuItems
           // Filtramos usando el userRole normalizado
-          .filter((item) => item.roles.includes(userRole))
+          .filter((item) => item.roles.includes(effectiveRole))
           .map((item) => {
             const isActive = location.pathname === item.path;
             return (

@@ -1,32 +1,32 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 export default function ProtectedRoute({ roles }) {
-  const { user, loading } = useAuth();
+  // 1. Verificamos si hay una sesión activa en el navegador
+  const storedData = localStorage.getItem('usuario_activo');
+  const user = storedData ? JSON.parse(storedData) : null;
 
-  // 1. Mientas se verifica el token contra la API de Django
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <p>Cargando sesión...</p>
-      </div>
-    );
-  }
-
-  // 2. Si no hay usuario autenticado -> Redirigir al Login
+  // Si no hay usuario logueado, se va al login obligatoriamente
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 3. Normalizamos la verificación del rol (soporta tanto user.role como user.rol)
-  const userRole = user.role || user.rol;
+  // 2. Extraemos y normalizamos el rol (buscamos en todas las rutas posibles del objeto)
+  const rawRole = user?.profile?.rol || user?.rol || user?.role || 'student';
+  const userRole = rawRole.toLowerCase();
 
-  // 4. Si la ruta requiere roles específicos y el usuario no los posee
-  if (roles && (!userRole || !roles.includes(userRole))) {
-    return <Navigate to="/clases" replace />;
+  // 3. Validación estricta de Roles
+  if (roles && roles.length > 0) {
+    // Normalizamos la lista de roles permitidos que pasamos desde App.jsx
+    const normalizedRoles = roles.map(r => r.toLowerCase());
+    
+    // Si el rol del usuario NO está incluido en los permitidos para esta ruta:
+    if (!normalizedRoles.includes(userRole)) {
+      // Lo redirigimos a su vista general permitida (por ejemplo, /clases)
+      return <Navigate to="/clases" replace />;
+    }
   }
 
-  // 5. Autenticado y autorizado -> Renderiza los componentes hijos
+  // 4. Si el usuario cuenta con el rol correcto, se le otorga el acceso
   return <Outlet />;
 }

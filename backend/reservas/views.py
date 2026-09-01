@@ -18,19 +18,19 @@ from .serializers import (
 class AulaViewSet(viewsets.ModelViewSet):
     queryset = Aula.objects.all()
     serializer_class = AulaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
 
 class MaterialViewSet(viewsets.ModelViewSet):
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
 
 class ReservaViewSet(viewsets.ModelViewSet):
     queryset = Reserva.objects.all()
     serializer_class = ReservaSerializer
-    permission_classes = [IsAuthenticated]  # Solo usuarios logueados pueden gestionar reservas
+    permission_classes = [AllowAny]  # Cualquier usuario puede gestionar reservas
 
     def get_queryset(self):
         user = self.request.user
@@ -57,7 +57,7 @@ class RegistroView(generics.CreateAPIView):
 
 # Vista opcional: Devuelve los datos del usuario logueado actualmente
 class UserPerfilView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         serializer = UserSerializer(request.user)

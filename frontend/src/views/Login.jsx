@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom'; 
 import api from '../service/api.js'; 
 import { 
@@ -12,7 +11,6 @@ import {
 import logoUnraf from '../assets/logo-unraf.png';
 
 export default function Login() {
-  const { login } = useAuth(); 
   const navigate = useNavigate();
   
   const [isRegister, setIsRegister] = useState(false);
@@ -37,10 +35,33 @@ export default function Login() {
     try {
       if (!isRegister) {
         // ----------------------------------------------------
-        // 1. INICIO DE SESIÓN (Delegado al AuthContext)
+        // 1. INICIO DE SESIÓN DIRECTO
         // ----------------------------------------------------
-        await login(username, password);
-        navigate('/clases', { replace: true });
+        const response = await api.post('login/', {
+          username: username,
+          password: password
+        });
+
+        const userData = response.data || {};
+
+        // 🚀 EXTRACCIÓN Y ESTANDARIZACIÓN ESTRICTA DEL ROL REAL
+        // Buscamos el rol de manera segura donde sea que lo envíe el backend
+        const backendRole = userData.rol || userData.role || userData.profile?.rol || 'student';
+
+        // Armamos el objeto de sesión institucional blindado
+        const usuarioSeguro = {
+          id: userData.id || 1,
+          username: userData.username || username,
+          nombre: userData.nombre || userData.first_name || userData.name || username,
+          rol: backendRole.toLowerCase(), // Normalizado para que el Sidebar lo filtre a la perfección
+          ...userData 
+        };
+
+        // Guardamos los datos limpios en el navegador
+        localStorage.setItem('usuario_activo', JSON.stringify(usuarioSeguro));
+        
+        // Recarga forzada limpia para que el layout lea los roles y renderice el Sidebar correspondiente
+        window.location.href = '/clases';
 
       } else {
         // ----------------------------------------------------
@@ -210,7 +231,7 @@ export default function Login() {
                 >
                   <MenuItem value="student">Estudiante</MenuItem>
                   <MenuItem value="teacher">Docente</MenuItem>
-                  <MenuItem value="admin">Administrador</MenuItem>
+                  {/* <MenuItem value="admin">Administrador</MenuItem> */}
                 </TextField>
               )}
 

@@ -14,9 +14,9 @@ import Reservas from './views/Reservas';
 import Profile from './views/Profile';
 
 // Vistas Exclusivas del Administrador
-import GestionAulas from './views/admin/GestionAulas'; 
-import StockMateriales from './views/admin/StockMateriales';
-import ControlUsuarios from './views/admin/ControlUsuarios';
+//import GestionAulas from './views/admin/GestionAulas'; 
+//import StockMateriales from './views/admin/StockMateriales';
+//import ControlUsuarios from './views/admin/ControlUsuarios';
 
 function App() {
   return (
@@ -27,7 +27,7 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           {/* Redirección por Defecto desde la Raíz */}
-          <Route path="/" element={<Navigate to="/clases" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
 
           {/* Rutas Autenticadas (Soporta nombres en inglés y español para el rol) */}
           <Route element={<ProtectedRoute roles={['student', 'teacher', 'admin', 'estudiante', 'profesor', 'docente']} />}>
@@ -40,11 +40,11 @@ function App() {
               <Route path="/perfil" element={<Profile />} />
 
               {/* Rutas Exclusivas para Administrador */}
-              <Route element={<ProtectedRoute roles={['admin', 'administrador']} />}>
+              {/* <Route element={<ProtectedRoute roles={['admin', 'administrador']} />}>
                 <Route path="/admin/aulas" element={<GestionAulas />} />
                 <Route path="/admin/stock" element={<StockMateriales />} />
                 <Route path="/admin/usuarios" element={<ControlUsuarios />} />
-              </Route>
+              </Route> */}
 
             </Route>
           </Route>
